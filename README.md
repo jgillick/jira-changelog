@@ -15,7 +15,7 @@ Will be associated with the Jira issue `DEV-123`.
 ## Installation
 
 ```bash
-npm install -g .
+npm install -g jira-changelog
 ```
 
 
@@ -77,6 +77,10 @@ The code used to generate the changelogs can also be used as modules in your Jav
 See the module source for documentation.
 
 For example:
+
+```bash
+npm install -S jira-changelog
+```
 
 ```javascript
 const Config = require('jira-changelog').Config;
