@@ -9,6 +9,7 @@ import 'source-map-support/register';
 import program from 'commander';
 import _ from 'lodash';
 import ejs from 'ejs'
+import path from 'path';
 import Slack from './Slack';
 import Entities from 'html-entities';
 
@@ -54,6 +55,7 @@ async function runProgram() {
     if (program.args.length) {
       gitPath = program.args[0];
     }
+    gitPath = path.resolve(gitPath);
 
     const config = getConfigForPath(gitPath);
     const slack = new Slack(config);
