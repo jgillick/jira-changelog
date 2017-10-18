@@ -13,7 +13,8 @@
   "scripts": {
     "build": "babel src --out-dir dist -s; cp changelog.config.js ./dist/",
     "clean": "rm -r dist || true",
-    "test": "mocha"
+    "test": "mocha",
+    "prepare": "npm run build"
   },
   "author": "Jeremy Gillick",
   "license": "MIT",

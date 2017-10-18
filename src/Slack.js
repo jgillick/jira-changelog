@@ -139,6 +139,7 @@ export default class Slack {
         {
           text,
           channel,
+          parse: 'full',
           username: self.config.slack.username,
           icon_emoji: self.config.slack.icon_emoji,
           icon_url: self.config.slack.icon_url
