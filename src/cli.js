@@ -230,10 +230,11 @@ function getRangeObject(config) {
 
   // Use default range
   if (!Object.keys(range).length && Object.keys(defaultRange).length) {
-    Object.assign(range, config.sourceControl.defaultRange);
-  } else {
-      throw new Error('No range defined for the changelog.');
+    Object.assign(range, defaultRange);
   }
 
+  if (!Object.keys(range).length){
+      throw new Error('No range defined for the changelog.');
+  }
   return range;
 }
