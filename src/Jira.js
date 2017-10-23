@@ -10,14 +10,18 @@ export default class Jira {
   constructor(config) {
     this.config = config;
     this.slack = new Slack(config);
-    this.jira = new JiraApi({
-      protocol: 'https',
-      host: config.jira.api.host,
-      username: config.jira.api.username,
-      password: config.jira.api.password,
-      apiVersion: 2,
-      strictSSL: true
-    });
+    this.jira = undefined;
+
+    if (config.jira.api.host) {
+      this.jira = new JiraApi({
+        protocol: 'https',
+        host: config.jira.api.host,
+        username: config.jira.api.username,
+        password: config.jira.api.password,
+        apiVersion: 2,
+        strictSSL: true
+      });
+    }
   }
 
   /**
@@ -87,7 +91,7 @@ export default class Jira {
           }
         })
         .catch((err) => {
-          console.log('Ticket not found', id);
+          console.log(`Ticket ${id} not found: ${err}`);
         })
       );
     });
@@ -104,6 +108,10 @@ export default class Jira {
    * @return {Promise} Resolves a jira issue object, with added `slackUser` property.
    */
   async getJiraIssue(ticketId) {
+    if (!this.jira) {
+      return Promise.reject('Jira is not configured.');
+    }
+
     return this.jira.findIssue(ticketId).then((origTicket) => {
       const ticket = Object.assign({}, origTicket);
 

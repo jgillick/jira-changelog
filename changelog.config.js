@@ -75,7 +75,7 @@ module.exports = {
   // Learn more: http://ejs.co/
   template: `
 Jira Tickets
---------------
+---------------------
 <% tickets.all.forEach((ticket) => { %>
   * <<%= ticket.fields.issuetype.name %>> - <%- ticket.fields.summary %>
     [<%= ticket.key %>] https://styleseat.atlassian.net/browse/<%= ticket.key %>
@@ -83,7 +83,7 @@ Jira Tickets
 <% if (!tickets.all.length) {%> ~ None ~ <% } -%>
 
 Other Commits
--------------------
+---------------------
 <% commits.noTickets.forEach((commit) => { %>
   * <<%= commit.revision.substr(0, 7) %>> - <%= commit.summary -%>
 <% }); %>
