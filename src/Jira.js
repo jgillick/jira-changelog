@@ -95,7 +95,7 @@ export default class Jira {
           }
         })
         .catch((err) => {
-          console.log('Failed to attach release version to ticket: ', id, ' ',  err.error.errors);
+          console.log('Failed to attach release version to ticket: ', id, err.error.errors);
         })
       );
     });
