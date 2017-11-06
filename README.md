@@ -1,16 +1,44 @@
 Jira Changelog Generator
 ------------------------
 
-This script will look at a range of git commits, match them to Jira tickets and output all of it as a change log.
+Generates a changelog of Jira issues from your git history and, optionally, attach all issues to a release.
+
+For example:
+
+```bash
+$ jira-changelog --range origin/prod...origin/master
+```
+
+```
+Jira Tickets
+---------------------
+
+  * <Bug> - Unable to access date widget
+    [DEV-1234] https://yoursite.atlassian.net/browse/DEV-1234
+
+  * <Story> - Support left-handed keyboards
+    [DEV-5678] https://yoursite.atlassian.net/browse/DEV-5678
+
+  * <Story> - Search by location
+    [DEV-8901] https://yoursite.atlassian.net/browse/DEV-8901
+
+Other Commits
+---------------------
+
+  * <cd6f512> - Fix typo in welcome message
+
+Pending Approval
+---------------------
+ ~ None. Yay! ~
+```
+
+
+You can also have it automatically post to slack!
 
 ## How it works
 
-If a developer adds the Jira issue ticket key in their message in square brakets, like `[JIRA-123]`, this commit will be associated with that Jira issue ticket when the script runs.
+The script looks for Jira issue keys, surrounded by square brackets (i.e. `[DEV-123]`), in the git commit logs. When it finds one, it associates that Jira issue ticket with that commit and adds it to the changelog.
 
-For example, this commit message:
-`[DEV-123] Fixed a typo`
-
-Will be associated with the Jira issue `DEV-123`.
 
 ## Installation
 
@@ -21,13 +49,15 @@ npm install -g jira-changelog
 
 ## Configuration
 
-You'll need to configure Jira before you can use this effectively. Create a file called `changelog.config.js`, put it at the root of your workspace directory, where you'll call the jira-changelog command from. Here's a basic example with the Jira API values:
+You'll need to configure Jira before you can use this effectively. Create a file called `changelog.config.js` and put it at the root of your workspace directory; where you'll call the `jira-changelog` command from.
+
+Here's a simple example with sample Jira API values:
 
 ```javascript
 module.exports = {
   jira: {
     api: {
-      host: "myapp.atlassian.net",
+      host: "yoursite.atlassian.net",
       username: "jirauser",
       password: "s00persecurePa55w0rdBr0"
     },
@@ -43,13 +73,32 @@ To see all values suported, look at the `changelog.config.js` file at the root o
 jira-changelog --range origin/prod...origin/master
 ```
 
-Assuming you deploy from the prod branch, this will generate a changelog with all commits from the last production deploy to the current master version.
+Assuming you deploy from the prod branch, this will generate a changelog with all commits after the last production deploy to the current master version.
+
+If you define `sourceControl.defaultRange` in your config, you can run the command with the `--range` flag:
+
+```bash
+jira-changelog
+```
+
+## Releases
+
+You can automatically attach Jira issues to a release with the `--release` flag. For example, let's say we want to add all issues in the changelog to the "sprint-12" release:
+
+```bash
+jira-changelog --range origin/prod...origin/master --release sprint-12
+```
+
+This will set the `fixVersions` of all issues to "sprint-12" in Jira.
 
 ## Slack
 
-If you want to post the changelog to slack.
+You can also have the script automatically post to slack.
 
-First add slack to your configuration file:
+First, get an API token from Slack for your workspace:
+https://api.slack.com/tokens
+
+Then add slack to your configuration file:
 
 ```javascript
 module.exports = {
@@ -67,7 +116,11 @@ module.exports = {
 }
 ```
 
-Then add `--slack` to the command:
+ * Add your API token to `slack.apiKey`.
+ * `slack.channel` is the channel you want the script to send the changelog to.
+
+Then simply add the `--slack` flag to the command:
+
 ```bash
 jira-changelog --range origin/prod...origin/master --slack
 ```
