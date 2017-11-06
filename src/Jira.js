@@ -30,12 +30,12 @@ export default class Jira {
    * @param {String} commitLogs - A list of source control commit logs.
    * @return {Object}
    */
-  async generate(commitLogs) {
+  async generate(commitLogs, releaseVersion) {
     const logs = [];
     try {
 
       const promises = commitLogs.map((commit) => {
-        return this.findJiraInCommit(commit).then((log) => { logs.push(log); });
+        return this.findJiraInCommit(commit, releaseVersion).then((log) => { logs.push(log); });
       });
       promises.push(Promise.resolve());
 
@@ -50,29 +50,17 @@ export default class Jira {
    * ticket info for it.
    *
    * @param {Object} commitLog - Commit log object
+   * @param {String} releaseVersion - Release version eg, mobileweb-1.8.0
    * @return {Promsie} Resolves to an object with a jira array property
    */
-  findJiraInCommit(commitLog) {
+  findJiraInCommit(commitLog, releaseVersion) {
     const log = Object.assign({tickets: []}, commitLog);
     const ticketPattern = /[a-zA-Z]+\-[0-9]+/;
-    const searchPattern = new RegExp(this.config.jira.ticketIDPattern.source, 'g');
     const promises = [Promise.resolve()];
     const found = [];
 
-    // Filter by either the type whitelist or blacklist
-    // Returns true if the ticket should be included in the list
-    const includeTicket = (ticket) => {
-      const type = ticket.fields.issuetype.name;
-      if (Array.isArray(this.config.jira.includeIssueTypes) && this.config.jira.includeIssueTypes.length) {
-        return this.config.jira.includeIssueTypes.includes(type);
-      }
-      else if (Array.isArray(this.config.jira.excludeIssueTypes)) {
-        return !this.config.jira.excludeIssueTypes.includes(type);
-      }
-    };
-
     // Search for jira ticket numbers in the commit text
-    const tickets = log.fullText.match(searchPattern) || [];
+    const tickets = this.getTickets(log);
     tickets.forEach((ticketMatch) => {
 
       // Get the ticket ID, and skip loading if we already found this one
@@ -86,12 +74,28 @@ export default class Jira {
       promises.push(
         this.getJiraIssue(id)
         .then((ticket) => {
-          if (includeTicket(ticket)) {
+          if (this.includeTicket(ticket)) {
             log.tickets.push(ticket);
+            return ticket;
           }
         })
         .catch((err) => {
-          console.log(`Ticket ${id} not found: ${err}`);
+          console.log('Ticket not found', id);
+        })
+        .then((ticket) => {
+
+          // Add release version
+          if (ticket && releaseVersion) {
+            ticket.fields.fixVersions.push({name: releaseVersion});
+            return this.jira.updateIssue(ticket.id, {
+              fields: {
+                'fixVersions': ticket.fields.fixVersions
+              }
+            });
+          }
+        })
+        .catch((err) => {
+          console.log('Failed to attach release version to ticket: ', id, err.error.errors);
         })
       );
     });
@@ -122,5 +126,30 @@ export default class Jira {
       })
       .catch(() => ticket);
     });
+  }
+
+  /**
+   * Should ticket be included in changelog
+   * @param   {Object} ticket Jira ticket object
+   * @returns {Boolean}
+   */
+  includeTicket(ticket) {
+    const type = ticket.fields.issuetype.name;
+    if (Array.isArray(this.config.jira.includeIssueTypes) && this.config.jira.includeIssueTypes.length) {
+      return this.config.jira.includeIssueTypes.includes(type);
+    }
+    else if (Array.isArray(this.config.jira.excludeIssueTypes)) {
+      return !this.config.jira.excludeIssueTypes.includes(type);
+    }
+  }
+
+  /**
+   * Gets all tickets associated with a commit
+   * @param   {Object} log A commit's log object
+   * @returns {Array}      List of tickets in commit
+   */
+  getTickets(log) {
+    const searchPattern = new RegExp(this.config.jira.ticketIDPattern.source, 'g');
+    return log.fullText.match(searchPattern) || [];
   }
 }

@@ -40,6 +40,10 @@ function commandLineArgs() {
       '-s, --slack',
       'Automatically post changelog to slack (if configured)'
     )
+    .option(
+      '--release [release]',
+      'Assign a release version to these stories'
+    )
     .parse(process.argv);
 }
 
@@ -65,7 +69,7 @@ async function runProgram() {
     // Get logs
     const range = getRangeObject(config);
     const commitLogs = await source.getCommitLogs(gitPath, range);
-    const changelog = await jira.generate(commitLogs);
+    const changelog = await jira.generate(commitLogs, program.release);
 
     // Template data template
     let data = await transformCommitLogs(config, changelog);
