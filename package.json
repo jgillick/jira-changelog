@@ -32,6 +32,7 @@
     "commander": "^2.11.0",
     "ejs": "^2.5.7",
     "form-urlencoded": "^2.0.4",
+    "haikunator": "^2.0.0",
     "html-entities": "^1.2.1",
     "jira-client": "^6.4.0",
     "lodash": "^4.17.4",

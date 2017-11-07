@@ -12,6 +12,7 @@ import ejs from 'ejs'
 import path from 'path';
 import Slack from './Slack';
 import Entities from 'html-entities';
+import Haikunator from 'haikunator';
 
 import {getConfigForPath} from './Config';
 import SourceControl from './SourceControl';
@@ -66,6 +67,12 @@ async function runProgram() {
     const jira = new Jira(config);
     const source = new SourceControl(config);
 
+    // Release flag used, but no name passed
+    if (program.release === true) {
+      const haikunator = new Haikunator();
+      program.release = haikunator.haikunate();
+    }
+
     // Get logs
     const range = getRangeObject(config);
     const commitLogs = await source.getCommitLogs(gitPath, range);
@@ -76,6 +83,7 @@ async function runProgram() {
     if (typeof config.transformData == 'function') {
       data = await Promise.resolve(config.transformData(data));
     }
+    data.release = program.release;
 
     // Render and output template
     const entitles = new Entities.AllHtmlEntities();
