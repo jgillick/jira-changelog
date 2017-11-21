@@ -76,8 +76,8 @@ export default class SourceControl {
 
         // Add slack users to commit logs
         const promises = logs.map((log) => {
-          return this.slack.getUserForEmail(log.authorEmail)
-            .catch(() => {}) // ignore errors
+          return this.slack.findUser(log.authorEmail, log.authorName)
+            .catch((err) => { console.log(err); }) // ignore errors
             .then((slackUser) => {
               log.slackUser = slackUser;
               return log;

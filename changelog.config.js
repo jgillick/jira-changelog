@@ -85,14 +85,14 @@ Jira Tickets
 Other Commits
 ---------------------
 <% commits.noTickets.forEach((commit) => { %>
-  * <<%= commit.revision.substr(0, 7) %>> - <%= commit.summary -%>
+  * <%= commit.slackUser ? '@'+commit.slackUser.name : commit.authorName %> - <<%= commit.revision.substr(0, 7) %>> - <%= commit.summary -%>
 <% }); %>
 <% if (!commits.noTickets.length) {%> ~ None ~ <% } -%>
 
 Pending Approval
 ---------------------
 <% tickets.pendingByOwner.forEach((owner) => { %>
-@<%= (owner.slackUser) ? owner.slackUser.name : owner.email %>
+<%= (owner.slackUser) ? '@'+owner.slackUser.name : owner.email %>
 <% owner.tickets.forEach((ticket) => { -%>
   * https://styleseat.atlassian.net/browse/<%= ticket.key %>
 <% }); -%>

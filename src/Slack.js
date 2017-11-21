@@ -7,6 +7,9 @@ const MSG_SIZE_LIMIT = 4000;
 // Cache of GET requests
 const cache = {};
 
+// Cache of pending GET requests
+const pending = {};
+
 /**
  * Manages the slack integration.
  */
@@ -51,15 +54,21 @@ export default class Slack {
     else if (cachable && cache[url]) {
       return Promise.resolve(cache[url]);
     }
+    else if (method === 'GET' && pending[url]) {
+      return pending[url];
+    }
 
-    return fetch(url, { method, body, headers })
+    pending[url] = fetch(url, { method, body, headers })
     .then(res => res.json())
     .then((data) => {
       // Cache result
       if (cachable && data && data.ok) {
         cache[url] = data;
       }
+      return data;
     });
+
+    return pending[url];
   }
 
   /**
@@ -80,10 +89,12 @@ export default class Slack {
     }
 
     // Get users
-    return this.api("users.list").then((response) => {
-      if (response.error) {
-        console.error('Could not load slack users:', response.error);
-        return Promise.reject(response.error);
+    return this.api("users.list")
+    .then((response) => {
+      if (!response || response.error) {
+        const err = (response) ? response.error : 'No response from server';
+        console.error('Could not load slack users:', err);
+        return Promise.reject(err);
       }
 
       this.slackUsers = response.members;
@@ -92,16 +103,32 @@ export default class Slack {
   }
 
   /**
-   * Return a slack user object for an email address.
+   * Try to find a slack user by email and/or name
    *
    * @param {String} email - The email address to use to lookup the slack user.
+   * @param {String} name - The full name to use to lookup the slack user.
    * @return {Promise} Resolves to the slack user object or undefined
    */
-  getUserForEmail(email) {
+  findUser(email, name) {
     return this.getSlackUsers()
-    .then((users) => users.find(
-      user => (user.profile.email && user.profile.email.toLowerCase() === email.toLowerCase())
-    ));
+    .then((users) => {
+
+      // Try by email first (more exact match)
+      email = email.toLowerCase();
+      let found = users.find(u => (u.profile.email && u.profile.email.toLowerCase() === email));
+
+      // Fallback to name
+      if (!found && name) {
+        name = name.toLowerCase();
+        found = users.find((u) => {
+          const profile = u.profile;
+          return (profile.real_name && profile.real_name.toLowerCase() === name) ||
+                 (profile.real_name_normalized && profile.real_name_normalized.toLowerCase() === name);
+        });
+      }
+
+      return found;
+    });
   }
 
   /**

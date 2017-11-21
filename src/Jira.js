@@ -119,7 +119,7 @@ export default class Jira {
     return this.jira.findIssue(ticketId).then((origTicket) => {
       const ticket = Object.assign({}, origTicket);
 
-      return this.slack.getUserForEmail(ticket.fields.reporter.emailAddress)
+      return this.slack.findUser(ticket.fields.reporter.emailAddress, ticket.fields.reporter.displayName)
       .then((slackUser) => {
         ticket.slackUser = slackUser;
         return ticket;
