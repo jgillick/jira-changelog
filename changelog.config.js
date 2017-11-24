@@ -13,6 +13,9 @@ module.exports = {
     // Regex used to match the issue ticket key
     ticketIDPattern: /\[[a-zA-Z]+\-[0-9]+\]/,
 
+    // Ticket's Browse URL
+    ticketBrowseURL: 'https://styleseat.atlassian.net/browse/',
+
     // Status names that mean the ticket is approved.
     approvalStatus: ['Done', 'Closed', 'Accepted'],
 
@@ -78,7 +81,7 @@ Jira Tickets
 ---------------------
 <% tickets.all.forEach((ticket) => { %>
   * <<%= ticket.fields.issuetype.name %>> - <%- ticket.fields.summary %>
-    [<%= ticket.key %>] https://styleseat.atlassian.net/browse/<%= ticket.key %>
+    [<%= ticket.key %>] <%= jira.ticketBrowseURL + ticket.key %>
 <% }); -%>
 <% if (!tickets.all.length) {%> ~ None ~ <% } -%>
 
@@ -94,7 +97,7 @@ Pending Approval
 <% tickets.pendingByOwner.forEach((owner) => { %>
 <%= (owner.slackUser) ? '@'+owner.slackUser.name : owner.email %>
 <% owner.tickets.forEach((ticket) => { -%>
-  * https://styleseat.atlassian.net/browse/<%= ticket.key %>
+  * <%= jira.ticketBrowseURL + ticket.key %>
 <% }); -%>
 <% }); -%>
 <% if (!tickets.pendingByOwner.length) {%> ~ None. Yay! ~ <% } -%>
