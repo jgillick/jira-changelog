@@ -96,7 +96,7 @@ export default class Jira {
       promises.push(
         this.getJiraIssue(id)
         .then((ticket) => {
-          if (!this.includeTicket(ticket)) {
+          if (this.includeTicket(ticket)) {
             log.tickets.push(ticket);
             return ticket;
           }
