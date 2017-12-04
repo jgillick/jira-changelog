@@ -100,14 +100,14 @@ Jira Tickets
   * <<%= ticket.fields.issuetype.name %>> - <%- ticket.fields.summary %>
     [<%= ticket.key %>] <%= jira.baseUrl + '/browse/' + ticket.key %>
 <% }); -%>
-<% if (!tickets.all.length) {%> ~ None ~ <% } -%>
+<% if (!tickets.all.length) {%> ~ None ~ <% } %>
 
 Other Commits
 ---------------------
 <% commits.noTickets.forEach((commit) => { %>
   * <%= commit.slackUser ? '@'+commit.slackUser.name : commit.authorName %> - <<%= commit.revision.substr(0, 7) %>> - <%= commit.summary -%>
-<% }); %>
-<% if (!commits.noTickets.length) {%> ~ None ~ <% } -%>
+<% }); -%>
+<% if (!commits.noTickets.length) {%> ~ None ~ <% } %>
 
 Pending Approval
 ---------------------
@@ -117,6 +117,6 @@ Pending Approval
   * <%= jira.baseUrl + '/browse/' + ticket.key %>
 <% }); -%>
 <% }); -%>
-<% if (!tickets.pendingByOwner.length) {%> ~ None. Yay! ~ <% } -%>
+<% if (!tickets.pendingByOwner.length) {%> ~ None. Yay! ~ <% } %>
 `
 };
