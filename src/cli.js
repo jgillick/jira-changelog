@@ -84,6 +84,9 @@ async function runProgram() {
       data = await Promise.resolve(config.transformData(data));
     }
     data.release = program.release;
+    data.jira = {
+      ticketBrowseURL: config.jira.ticketBrowseURL
+    };
 
     // Render and output template
     const entitles = new Entities.AllHtmlEntities();
