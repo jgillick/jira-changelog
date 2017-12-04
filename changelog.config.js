@@ -1,3 +1,5 @@
+var Haikunator = require('haikunator')
+
 module.exports = {
 
   // Jira integration
@@ -7,14 +9,18 @@ module.exports = {
     api: {
       host: undefined,
       username: undefined,
-      password: undefined
+      password: undefined,
     },
+
+    // Jira base web URL
+    // Set to the base URL for your Jira account
+    baseUrl: 'https://atlassian.net',
+
+    // The Jira project name (use for creating release versions)
+    project: undefined,
 
     // Regex used to match the issue ticket key
     ticketIDPattern: /\[[a-zA-Z]+\-[0-9]+\]/,
-
-    // Ticket's Browse URL
-    ticketBrowseURL: 'https://styleseat.atlassian.net/browse/',
 
     // Status names that mean the ticket is approved.
     approvalStatus: ['Done', 'Closed', 'Accepted'],
@@ -24,7 +30,14 @@ module.exports = {
 
     // Tickets to include in changelog, by type name.
     // If this is defined, `excludeIssueTypes` is ignored.
-    includeIssueTypes: []
+    includeIssueTypes: [],
+
+    // Get the release version name to use when using `--release` without a value.
+    // Returns a Promise
+    generateReleaseVersionName: function() {
+      const haikunator = new Haikunator();
+      return Promise.resolve(haikunator.haikunate());
+    }
   },
 
   // Slack API integration
@@ -63,25 +76,29 @@ module.exports = {
 
   // Transforms the basic changelog data before it goes to the template.
   //  data - The changlelog data.
-  transformData(data) {
+  transformData: function(data) {
     return Promise.resolve(data);
   },
 
   // Transform the changelog before posting to slack
   //  content - The changelog content which was output by the command
   //  data - The data which generated the changelog content.
-  transformForSlack(content, data) {
+  transformForSlack: function(content, data) {
     return Promise.resolve(content);
   },
 
   // The template that generates the output, as an ejs template.
   // Learn more: http://ejs.co/
-  template: `
+  template:
+`<% if (jira.releaseVersion) { %>
+Release: <%= jira.releaseVersion.name %>: <%= jira.baseUrl + '/projects/' + jira.projectName + '/versions/' + jira.releaseVersion.id %>
+<% } -%>
+
 Jira Tickets
 ---------------------
 <% tickets.all.forEach((ticket) => { %>
   * <<%= ticket.fields.issuetype.name %>> - <%- ticket.fields.summary %>
-    [<%= ticket.key %>] <%= jira.ticketBrowseURL + ticket.key %>
+    [<%= ticket.key %>] <%= jira.baseUrl + '/browse/' + ticket.key %>
 <% }); -%>
 <% if (!tickets.all.length) {%> ~ None ~ <% } -%>
 
@@ -97,7 +114,7 @@ Pending Approval
 <% tickets.pendingByOwner.forEach((owner) => { %>
 <%= (owner.slackUser) ? '@'+owner.slackUser.name : owner.email %>
 <% owner.tickets.forEach((ticket) => { -%>
-  * <%= jira.ticketBrowseURL + ticket.key %>
+  * <%= jira.baseUrl + '/browse/' + ticket.key %>
 <% }); -%>
 <% }); -%>
 <% if (!tickets.pendingByOwner.length) {%> ~ None. Yay! ~ <% } -%>

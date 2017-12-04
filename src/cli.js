@@ -12,7 +12,6 @@ import ejs from 'ejs'
 import path from 'path';
 import Slack from './Slack';
 import Entities from 'html-entities';
-import Haikunator from 'haikunator';
 
 import {getConfigForPath} from './Config';
 import SourceControl from './SourceControl';
@@ -69,8 +68,11 @@ async function runProgram() {
 
     // Release flag used, but no name passed
     if (program.release === true) {
-      const haikunator = new Haikunator();
-      program.release = haikunator.haikunate();
+      if (typeof config.jira.generateReleaseVersionName !== 'function') {
+        console.log("You need to define the jira.generateReleaseVersionName function in your config, if you're not going to pass the release version name in the command.")
+        return;
+      }
+      program.release = await config.jira.generateReleaseVersionName();
     }
 
     // Get logs
@@ -83,9 +85,10 @@ async function runProgram() {
     if (typeof config.transformData == 'function') {
       data = await Promise.resolve(config.transformData(data));
     }
-    data.release = program.release;
     data.jira = {
-      ticketBrowseURL: config.jira.ticketBrowseURL
+      baseUrl: config.jira.baseUrl,
+      releaseVersion: jira.releaseVersion,
+      projectName: config.jira.project
     };
 
     // Render and output template

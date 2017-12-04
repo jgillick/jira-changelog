@@ -11,6 +11,7 @@ export default class Jira {
     this.config = config;
     this.slack = new Slack(config);
     this.jira = undefined;
+    this.releaseVersion = undefined;
 
     if (config.jira.api.host) {
       this.jira = new JiraApi({
@@ -25,21 +26,42 @@ export default class Jira {
   }
 
   /**
-   * Generate changelog by matching source control commit logs to jiar tickets.
+   * Generate changelog by matching source control commit logs to jira tickets
+   * and, optionally, creating the release version.
    *
-   * @param {String} commitLogs - A list of source control commit logs.
+   * @param {Array} commitLogs - A list of source control commit logs.
    * @return {Object}
    */
   async generate(commitLogs, releaseVersion) {
     const logs = [];
+    this.releaseVersion = undefined;
     try {
 
       const promises = commitLogs.map((commit) => {
-        return this.findJiraInCommit(commit, releaseVersion).then((log) => { logs.push(log); });
+        return this.findJiraInCommit(commit, releaseVersion)
+          .then((log) => { logs.push(log); });
       });
       promises.push(Promise.resolve());
 
-      return Promise.all(promises).then(() => logs);
+      return Promise.all(promises)
+        // Add to release version
+        .then(() => {
+
+          // Get all Jira tickets (filter out duplicates by keying on ID)
+          let ticketsHash = {};
+          let ticketsList = [];
+          logs.forEach((log) => {
+            log.tickets.forEach(ticket => ticketsHash[ticket.id] = ticket);
+          });
+          ticketsList = Object.keys(ticketsHash).map(k => ticketsHash[k]);
+
+          // If there are Jira tickets, create a release for them
+          if (ticketsList.length && releaseVersion) {
+            return this.addTicketsToReleaseVersion(ticketsList, releaseVersion).then(() => logs);
+          }
+
+          return logs;
+        });
     } catch(e) {
       throw new Error(e);
     }
@@ -53,7 +75,7 @@ export default class Jira {
    * @param {String} releaseVersion - Release version eg, mobileweb-1.8.0
    * @return {Promsie} Resolves to an object with a jira array property
    */
-  findJiraInCommit(commitLog, releaseVersion) {
+  findJiraInCommit(commitLog) {
     const log = Object.assign({tickets: []}, commitLog);
     const ticketPattern = /[a-zA-Z]+\-[0-9]+/;
     const promises = [Promise.resolve()];
@@ -74,7 +96,7 @@ export default class Jira {
       promises.push(
         this.getJiraIssue(id)
         .then((ticket) => {
-          if (this.includeTicket(ticket)) {
+          if (!this.includeTicket(ticket)) {
             log.tickets.push(ticket);
             return ticket;
           }
@@ -82,26 +104,56 @@ export default class Jira {
         .catch((err) => {
           console.log('Ticket not found', id);
         })
-        .then((ticket) => {
-
-          // Add release version
-          if (ticket && releaseVersion) {
-            ticket.fields.fixVersions.push({name: releaseVersion});
-            return this.jira.updateIssue(ticket.id, {
-              fields: {
-                'fixVersions': ticket.fields.fixVersions
-              }
-            });
-          }
-        })
-        .catch((err) => {
-          console.log('Failed to attach release version to ticket: ', id, err.error.errors);
-        })
       );
     });
 
     // Resolve log when all jira promises are done
     return Promise.all(promises).then(() => log);
+  }
+
+  /**
+   * Creates a release version and assigns it to a list of tickets.
+   *
+   * @param {Array} ticket - List of Jira ticket objects
+   * @param {String} versionName - The name of the release version to add the ticket to.
+   * @return {Promise}
+   */
+  async addTicketsToReleaseVersion(tickets, versionName) {
+    if (!this.config.jira.project) {
+      throw new Error('Cannot create Jira release version without jira.project being defined in the config.');
+    }
+
+    let versionObj;
+    let searchName = versionName.toLowerCase();
+    const versions = await this.jira.getVersions(this.config.jira.project);
+    const exists = versions.filter(v => v.name.toLowerCase() == searchName);
+
+    // Version already exists
+    if (exists.length) {
+      versionObj = exists[0];
+    }
+    // Add new release version
+    else {
+      versionObj = await this.jira.createVersion({
+        name: versionName,
+        project: this.config.jira.project
+      });
+    }
+    this.releaseVersion = versionObj;
+
+    // Add to tickets
+    const promises = tickets.map((ticket) => {
+      ticket.fields.fixVersions.push({name: versionObj.name});
+      return this.jira.updateIssue(ticket.id, {
+          fields: {
+            'fixVersions': ticket.fields.fixVersions
+          }
+        }).catch((err) => {
+          console.log(`Could not assign ticket ${ticket.key} to release '${versionObj.name}':`, err.error.errors);
+        });
+    });
+
+    return Promise.all(promises);
   }
 
   /**
