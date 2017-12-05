@@ -77,7 +77,7 @@ export default class Jira {
    */
   findJiraInCommit(commitLog) {
     const log = Object.assign({tickets: []}, commitLog);
-    const ticketPattern = /[a-zA-Z]+\-[0-9]+/;
+    const ticketPattern = this.config.jira.ticketIDPattern.source;
     const promises = [Promise.resolve()];
     const found = [];
 
