@@ -77,20 +77,23 @@ export default class Jira {
    */
   findJiraInCommit(commitLog) {
     const log = Object.assign({tickets: []}, commitLog);
-    const ticketPattern = /[a-zA-Z]+\-[0-9]+/;
     const promises = [Promise.resolve()];
     const found = [];
+
+    const configPattern = this.config.jira.ticketIDPattern;
+    const ticketPattern = new RegExp(configPattern.source, configPattern.flags.replace('g', ''));
 
     // Search for jira ticket numbers in the commit text
     const tickets = this.getTickets(log);
     tickets.forEach((ticketMatch) => {
 
       // Get the ticket ID, and skip loading if we already found this one
-      const id = ticketMatch.match(ticketPattern)[0];
-      if (found.includes(id)) {
+      let id = ticketMatch.match(ticketPattern);
+      id = (id.length > 1) ? id[1] : id[0];
+      if (found.includes(id.toLowerCase())) {
         return;
       }
-      found.push(id);
+      found.push(id.toLowerCase());
 
       // Load JIRA object from the API
       promises.push(
@@ -201,7 +204,8 @@ export default class Jira {
    * @returns {Array}      List of tickets in commit
    */
   getTickets(log) {
-    const searchPattern = new RegExp(this.config.jira.ticketIDPattern.source, 'g');
+    const configPattern = this.config.jira.ticketIDPattern;
+    const searchPattern = new RegExp(configPattern.source, `${configPattern.flags || ''}g`);
     return log.fullText.match(searchPattern) || [];
   }
 }
