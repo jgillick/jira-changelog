@@ -213,8 +213,8 @@ export default class Slack {
 
         // Add last block and start new one
         if (block.length) {
-          block = line;
           messages.push(block);
+          block = line;
         }
 
         // No existing block, this line must be loner than the limit
@@ -233,6 +233,9 @@ export default class Slack {
         }
       }
     });
+    if (block) {
+      messages.push(block);
+    }
 
     return messages;
   }
