@@ -37,6 +37,7 @@
     "jira-client": "^6.4.0",
     "lodash": "^4.17.4",
     "node-fetch": "^1.7.3",
+    "promise-throttle": "^0.3.1",
     "request": "^2.83.0",
     "simple-git": "^1.79.0",
     "source-map-support": "^0.5.0"

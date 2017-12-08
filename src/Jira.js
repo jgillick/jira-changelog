@@ -1,6 +1,12 @@
 import "babel-polyfill";
 import JiraApi from 'jira-client';
+import PromiseThrottle from 'promise-throttle';
 import Slack from './Slack';
+
+const promiseThrottle = new PromiseThrottle({
+  requestsPerSecond: 10,
+  promiseImplementation: Promise
+});
 
 /**
  * Generate changelog by matching source control commit logs to jiar tickets.
@@ -12,6 +18,7 @@ export default class Jira {
     this.slack = new Slack(config);
     this.jira = undefined;
     this.releaseVersion = undefined;
+    this.ticketPromises = {};
 
     if (config.jira.api.host) {
       this.jira = new JiraApi({
@@ -77,8 +84,8 @@ export default class Jira {
    */
   findJiraInCommit(commitLog) {
     const log = Object.assign({tickets: []}, commitLog);
-    const promises = [Promise.resolve()];
-    const found = [];
+    const promises = [];
+    const found = {};
 
     const configPattern = this.config.jira.ticketIDPattern;
     const ticketPattern = new RegExp(configPattern.source, configPattern.flags.replace('g', ''));
@@ -87,31 +94,61 @@ export default class Jira {
     const tickets = this.getTickets(log);
     tickets.forEach((ticketMatch) => {
 
-      // Get the ticket ID, and skip loading if we already found this one
-      let id = ticketMatch.match(ticketPattern);
-      id = (id.length > 1) ? id[1] : id[0];
-      if (found.includes(id.toLowerCase())) {
+      // Get the ticket key, and skip loading if we already got this one
+      let key = ticketMatch.match(ticketPattern);
+      key = (key.length > 1) ? key[1] : key[0];
+      if (!key) {
         return;
       }
-      found.push(id.toLowerCase());
+      key = key.toUpperCase();
+      if (found[key]){
+        return;
+      }
+      found[key] = true;
 
-      // Load JIRA object from the API
       promises.push(
-        this.getJiraIssue(id)
-        .then((ticket) => {
-          if (this.includeTicket(ticket)) {
-            log.tickets.push(ticket);
-            return ticket;
-          }
-        })
-        .catch((err) => {
-          console.log('Ticket not found', id);
-        })
+        this.getJiraTicketForCommit(log, key)
       );
     });
 
     // Resolve log when all jira promises are done
     return Promise.all(promises).then(() => log);
+  }
+
+  /**
+   * Load a Jira issue ticket for a commit object
+   *
+   * @param {Object} commitLog - Commit log object
+   * @param {String} ticketKey - The Jira ticket ID key
+   *
+   * @return {Promise}
+   */
+  getJiraTicketForCommit(commitLog, ticketKey) {
+    if (!ticketKey) {
+      return Promise.resolve();
+    }
+
+    // Get Jira issue ticket object
+    let promise = this.ticketPromises[ticketKey];
+    if (!promise) {
+      promise = promiseThrottle.add(
+        this.getJiraIssue.bind(this, ticketKey)
+      );
+      promise.catch(() => {
+        console.log(`Ticket ${ticketKey} not found`);
+      });
+      this.ticketPromises[ticketKey] = promise;
+    }
+
+    // Add to commit
+    promise.then((ticket) => {
+      if (this.includeTicket(ticket)) {
+        commitLog.tickets.push(ticket);
+        return ticket;
+      }
+    });
+
+    return promise;
   }
 
   /**
@@ -131,6 +168,12 @@ export default class Jira {
     const versions = await this.jira.getVersions(this.config.jira.project);
     const exists = versions.filter(v => v.name.toLowerCase() == searchName);
 
+    function updateTicketVersion(ticket) {
+      return this.jira.updateIssue(ticket.id, {
+        fields: { fixVersions: ticket.fields.fixVersions }
+      });
+    }
+
     // Version already exists
     if (exists.length) {
       versionObj = exists[0];
@@ -147,15 +190,11 @@ export default class Jira {
     // Add to tickets
     const promises = tickets.map((ticket) => {
       ticket.fields.fixVersions.push({name: versionObj.name});
-      return this.jira.updateIssue(ticket.id, {
-          fields: {
-            'fixVersions': ticket.fields.fixVersions
-          }
-        }).catch((err) => {
+      return promiseThrottle.add(updateTicketVersion.bind(this, ticket))
+        .catch((err) => {
           console.log(`Could not assign ticket ${ticket.key} to release '${versionObj.name}':`, err.error.errors);
         });
     });
-
     return Promise.all(promises);
   }
 
