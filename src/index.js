@@ -2,6 +2,6 @@
 // Jira Changelog API
 module.exports = {
   SourceControl: require('./SourceControl').default,
-  Jira: require('./JiraChangelog').default,
+  Jira: require('./Jira').default,
   Config: require('./Config')
 };
