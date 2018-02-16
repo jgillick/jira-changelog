@@ -18,7 +18,7 @@ import defaultConfig from './changelog.config.js';
  * Name of the local config files.
  * Put this file in the directory where you call the jira-changelog command.
  */
-const CONF_FILENAME = 'changelog.config.js';
+export const CONF_FILENAME = 'changelog.config.js';
 
 /**
  * Return the default config object.
@@ -28,17 +28,13 @@ export function getDefaultConfig() {
 }
 
 /**
- * Retreives the configuration object defined by `changelog.config.js` at a path.
- * This config module is then merged with the default config object.
- * If the config module does not exists at the path, the default object is returned.
+ * Reads the config file, merges it with the default values and returns the object.
  *
- * @param {String} baseDir - The directory which might contain the changelog config module.
- *
+ * @param {String} configPath - The path to the config file.
  * @return {Object} Configuration object.
  */
-export function getConfigForPath(baseDir) {
+export function readConfigFile(configPath) {
   let localConf = {};
-  const configPath = path.join(baseDir, CONF_FILENAME);
 
   try {
     // Check if file exists

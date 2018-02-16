@@ -13,7 +13,7 @@ import path from 'path';
 import Slack from './Slack';
 import Entities from 'html-entities';
 
-import {getConfigForPath} from './Config';
+import {readConfigFile, CONF_FILENAME} from './Config';
 import SourceControl from './SourceControl';
 import Jira from './Jira';
 
@@ -26,6 +26,10 @@ function commandLineArgs() {
   const pkg = require('../package.json');
   program
     .version(pkg.version)
+    .option(
+      '-c, --config <filepath>',
+      'Path to the config file.'
+    )
     .option(
       '-r, --range <from>...<to>',
       'git commit range for changelog',
@@ -61,7 +65,15 @@ async function runProgram() {
     }
     gitPath = path.resolve(gitPath);
 
-    const config = getConfigForPath(gitPath);
+    // Config file path
+    var configPath;
+    if (program.config) {
+      configPath = path.resolve(program.config);
+    } else {
+      configPath = path.join(gitPath, CONF_FILENAME);
+    }
+
+    const config = readConfigFile(configPath);
     const slack = new Slack(config);
     const jira = new Jira(config);
     const source = new SourceControl(config);
