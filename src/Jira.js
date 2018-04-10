@@ -48,7 +48,7 @@ export default class Jira {
         return this.findJiraInCommit(commit, releaseVersion)
           .then((log) => { logs.push(log); });
       });
-      promises.push(Promise.resolve());
+      promises.push(Promise.resolve()); // ensure at least one
 
       return Promise.all(promises)
         // Add to release version
@@ -107,7 +107,7 @@ export default class Jira {
       found[key] = true;
 
       promises.push(
-        this.getJiraTicketForCommit(log, key)
+        this.getJiraTicketForCommit(log, key).catch(() => {}) // ignore errors
       );
     });
 
@@ -224,7 +224,7 @@ export default class Jira {
 
   /**
    * Should ticket be included in changelog
-   * @param   {Object} ticket Jira ticket object
+   * @param   {Object} ticket - Jira ticket object
    * @returns {Boolean}
    */
   includeTicket(ticket) {
@@ -239,8 +239,8 @@ export default class Jira {
 
   /**
    * Gets all tickets associated with a commit
-   * @param   {Object} log A commit's log object
-   * @returns {Array}      List of tickets in commit
+   * @param   {Object} log - A commit's log object
+   * @returns {Array} List of tickets in commit
    */
   getTickets(log) {
     const configPattern = this.config.jira.ticketIDPattern;
