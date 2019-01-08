@@ -16,9 +16,6 @@ module.exports = {
     // Set to the base URL for your Jira account
     baseUrl: 'https://atlassian.net',
 
-    // The Jira project name (use for creating release versions)
-    project: undefined,
-
     // Regex used to match the issue ticket key
     // Use capture group one to isolate the key text within surrounding characters (if needed).
     ticketIDPattern: /\[([A-Z]+\-[0-9]+)\]/i,
@@ -91,9 +88,12 @@ module.exports = {
   // The template that generates the output, as an ejs template.
   // Learn more: http://ejs.co/
   template:
-`<% if (jira.releaseVersion) { %>
-Release: <%= jira.releaseVersion.name %>: <%= jira.baseUrl + '/projects/' + jira.projectName + '/versions/' + jira.releaseVersion.id %>
-<% } -%>
+`<% if (jira.releaseVersions && jira.releaseVersions.length) {  %>
+Release version: <%= jira.releaseVersions[0].name -%>
+<% jira.releaseVersions.forEach((release) => { %>
+  * <%= release.projectKey %>: <%= jira.baseUrl + '/projects/' + release.projectKey + '/versions/' + release.id -%>
+<% }); -%>
+<% } %>
 
 Jira Tickets
 ---------------------

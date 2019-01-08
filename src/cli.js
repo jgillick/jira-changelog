@@ -4,7 +4,7 @@
  * The jira-changelog CLI
  */
 
-import "babel-polyfill";
+import "@babel/polyfill";
 import 'source-map-support/register';
 import program from 'commander';
 import _ from 'lodash';
@@ -74,7 +74,6 @@ async function runProgram() {
     }
 
     const config = readConfigFile(configPath);
-    const slack = new Slack(config);
     const jira = new Jira(config);
     const source = new SourceControl(config);
 
@@ -99,8 +98,7 @@ async function runProgram() {
     }
     data.jira = {
       baseUrl: config.jira.baseUrl,
-      releaseVersion: jira.releaseVersion,
-      projectName: config.jira.project
+      releaseVersions: jira.releaseVersions,
     };
 
     // Render and output template
