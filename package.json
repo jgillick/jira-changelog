@@ -1,6 +1,6 @@
 {
   "name": "jira-changelog",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Generates a changelog by matching git commits to Jira tickets.",
   "repository": "https://github.com/jgillick/jira-changelog",
   "main": "dist/index.js",
