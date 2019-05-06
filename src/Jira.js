@@ -199,7 +199,7 @@ export default class Jira {
         .add(updateTicketVersion.bind(this, ticket))
         .catch((err) => {
           console.log(JSON.stringify(err, null, '  '));
-          console.log(`Could not assign ticket ${ticket.key} to release '${versionName}':`, err.error.errors);
+          console.log(`Could not assign ticket ${ticket.key} to release '${versionName}'!`);
         });
     });
     return Promise.all(promises);
