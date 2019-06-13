@@ -48,7 +48,7 @@ npm install -g jira-changelog
 
 ### JIRA setup
 
-Before configuring the app, register a user in Jira which will be used to retrieve and update tickets. Then create an [Auth Token](https://confluence.atlassian.com/cloud/api-tokens-938839638.html) for this user; this will be used to authenticate the user with this tool. Jira no longer supports authenticating with password for API calls.
+Before configuring the app, register a new user in Jira for the app to use to retrieve and update tickets. Then create an [Auth Token](https://confluence.atlassian.com/cloud/api-tokens-938839638.html) for this user, which will be used for authentication. Jira no longer supports authenticating with password for API calls.
 
 ### Configuration
 
@@ -76,7 +76,7 @@ The token is the [API token](https://confluence.atlassian.com/cloud/api-tokens-9
 jira-changelog --range origin/prod...origin/master
 ```
 
-Assuming you deploy from a branch named `prod`, this will generate a changelog with all commits after the last production deploy to the current master version (You can change the default branch names with the `sourceControl.defaultRange` object, in your config).
+Assuming you deploy from a branch named `prod`, this will generate a changelog with all commits after the last production deploy to the current master version (You can change the default branch names with the [sourceControl.defaultRange]((https://github.com/jgillick/jira-changelog/blob/master/) object, in your config).
 
 ```bash
 jira-changelog
