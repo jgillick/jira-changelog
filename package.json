@@ -1,6 +1,6 @@
 {
   "name": "jira-changelog",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Generates a changelog by matching git commits to Jira tickets.",
   "repository": "https://github.com/jgillick/jira-changelog",
   "main": "dist/index.js",
@@ -19,23 +19,23 @@
   "author": "Jeremy Gillick",
   "license": "MIT",
   "devDependencies": {
-    "@babel/cli": "^7.2.3",
-    "@babel/core": "^7.2.2",
-    "@babel/preset-env": "^7.2.3"
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.4.5"
   },
   "dependencies": {
-    "@babel/polyfill": "^7.2.5",
-    "commander": "^2.11.0",
-    "ejs": "^2.5.7",
-    "form-urlencoded": "^2.0.4",
-    "haikunator": "^2.0.0",
+    "@babel/polyfill": "^7.4.4",
+    "commander": "^2.20.0",
+    "ejs": "^2.6.1",
+    "form-urlencoded": "^2.0.9",
+    "haikunator": "^2.1.1",
     "html-entities": "^1.2.1",
-    "jira-client": "^6.4.0",
+    "jira-client": "^6.8.0",
     "lodash": "^4.17.11",
     "node-fetch": "^1.7.3",
     "promise-throttle": "^0.3.1",
     "request": "^2.88.0",
-    "simple-git": "^1.79.0",
-    "source-map-support": "^0.5.0"
+    "simple-git": "^1.113.0",
+    "source-map-support": "^0.5.12"
   }
 }

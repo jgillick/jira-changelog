@@ -20,12 +20,24 @@ export default class Jira {
     this.releaseVersions = [];
     this.ticketPromises = {};
 
+    const { host, username, password} = config.jira.api;
+    let { email, token } = config.jira.api;
+
+    if (!token && typeof password !== 'undefined') {
+      console.warn('WARNING: Jira password is deprecated. Use an API token instead.');
+      token = password
+    }
+    if (!email && typeof username !== 'undefined') {
+      console.warn('WARNING: Jira username is deprecated for API authentication. Use user email instead.');
+      email = username
+    }
+
     if (config.jira.api.host) {
       this.jira = new JiraApi({
+        host,
+        username: email,
+        password: token,
         protocol: 'https',
-        host: config.jira.api.host,
-        username: config.jira.api.username,
-        password: config.jira.api.password,
         apiVersion: 2,
         strictSSL: true
       });

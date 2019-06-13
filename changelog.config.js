@@ -7,9 +7,14 @@ module.exports = {
 
     // API
     api: {
+      // Root host of your JIRA installation without protocol.
+      // (i.e 'yourapp.atlassian.net')
       host: undefined,
-      username: undefined,
-      password: undefined,
+      // Email address of the user to login with
+      email: undefined,
+      // Auth token of the user to login with
+      // https://confluence.atlassian.com/cloud/api-tokens-938839638.html
+      token: undefined,
     },
 
     // Jira base web URL

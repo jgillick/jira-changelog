@@ -46,10 +46,13 @@ The script looks for Jira issue keys, surrounded by square brackets (i.e. `[DEV-
 npm install -g jira-changelog
 ```
 
+### JIRA setup
 
-## Configuration
+Before configuring the app, register a user in Jira which will be used to retrieve and update tickets. Then create an [Auth Token](https://confluence.atlassian.com/cloud/api-tokens-938839638.html) for this user; this will be used to authenticate the user with this tool. Jira no longer supports authenticating with password for API calls.
 
-You'll need to configure Jira before you can use this effectively. Create a file called `changelog.config.js` and put it at the root of your workspace directory; where you'll call the `jira-changelog` command from.
+### Configuration
+
+Create a file called `changelog.config.js` and put it at the root of your git workspace directory. This is also where you'll call the `jira-changelog` command from.
 
 Here's a simple example with sample Jira API values:
 
@@ -57,15 +60,15 @@ Here's a simple example with sample Jira API values:
 module.exports = {
   jira: {
     api: {
-      host: "yoursite.atlassian.net",
-      username: "jirauser",
-      password: "s00persecurePa55w0rdBr0"
+      host: 'myapp.atlassian.net',
+      email: 'jirauser@myapp.com',
+      token: 'qWoJBdlEp6pJy15fc9tGpsOOR2L5i35v'
     },
   }
 }
 ```
 
-To see all values suported, look at the `changelog.config.js` file at the root of this repo.
+The token is the [API token](https://confluence.atlassian.com/cloud/api-tokens-938839638.html) assigned to this user. To see all values supported, look at the [changelog.config.js](https://github.com/jgillick/jira-changelog/blob/master/changelog.config.js) file at the root of this repo.
 
 ## Usage
 
@@ -73,27 +76,32 @@ To see all values suported, look at the `changelog.config.js` file at the root o
 jira-changelog --range origin/prod...origin/master
 ```
 
-Assuming you deploy from the prod branch, this will generate a changelog with all commits after the last production deploy to the current master version.
-
-If you define `sourceControl.defaultRange` in your config, you can run the command with the `--range` flag:
+Assuming you deploy from a branch named `prod`, this will generate a changelog with all commits after the last production deploy to the current master version (You can change the default branch names with the `sourceControl.defaultRange` object, in your config).
 
 ```bash
 jira-changelog
 ```
 
-## Releases
-
-You can automatically attach Jira issues to a release with the `--release` flag. For example, let's say we want to add all issues in the changelog to the "sprint-12" release:
+Alternatively, you can specify a range (using [git commit range](https://git-scm.com/book/en/v2/Git-Tools-Revision-Selection#_commit_ranges) format) in the command:
 
 ```bash
-jira-changelog --range origin/prod...origin/master --release sprint-12
+jira-changelog --range origin/prod...origin/stage
+```
+
+
+## Releases
+
+You can automatically attach a release to all Jira issues in the changelog with the `--release` flag. For example, let's say we want to add all issues in the changelog to the "sprint-12" release:
+
+```bash
+jira-changelog --release sprint-12
 ```
 
 This will set the `fixVersions` of all issues to "sprint-12" in Jira.
 
 ## Slack
 
-You can also have the script automatically post to slack.
+The script can also automatically post the changelog to slack.
 
 First, get an API token from Slack for your workspace:
 https://api.slack.com/tokens
@@ -102,17 +110,11 @@ Then add slack to your configuration file:
 
 ```javascript
 module.exports = {
+  ...
   slack: {
     apiKey: 'asdlfkjasdoifuoiucvlkxjcvoixucvi',
     channel: '#changelogs'
   },
-  jira: {
-    api: {
-      host: "myapp.atlassian.net",
-      username: "jirauser",
-      password: "s00persecurePa55w0rdBr0"
-    },
-  }
 }
 ```
 
@@ -122,11 +124,11 @@ module.exports = {
 Then simply add the `--slack` flag to the command:
 
 ```bash
-jira-changelog --range origin/prod...origin/master --slack
+jira-changelog --slack
 ```
 
 ## API
-The code used to generate the changelogs can also be used as modules in your JavaScript.
+The code used to generate the changelogs can also be used as modules in your node app.
 See the module source for documentation.
 
 For example:
