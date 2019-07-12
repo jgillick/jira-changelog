@@ -145,7 +145,8 @@ const Jira = require('jira-changelog').Jira;
 const gitRepoPath = '/home/user/source/'
 
 // Get configuration
-const config = Config.getConfigForPath(gitRepoPath);
+const confPath = `${gitRepoPath}/changelog.config.js`;
+const config = Config.readConfigFile('/Users/jeremygillick/Source/app/changelog.config.js');
 
 // Get commits for a range
 const source = new SourceControl(config);

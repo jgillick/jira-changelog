@@ -41,6 +41,8 @@ export default class Jira {
         apiVersion: 2,
         strictSSL: true
       });
+    } else {
+      console.error('ERROR: Cannot configure Jira without a host configuration.');
     }
   }
 
