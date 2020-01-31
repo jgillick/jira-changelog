@@ -1,4 +1,5 @@
-import "@babel/polyfill";
+import "core-js/stable";
+import "regenerator-runtime/runtime";
 import JiraApi from 'jira-client';
 import PromiseThrottle from 'promise-throttle';
 import Slack from './Slack';

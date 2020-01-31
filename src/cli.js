@@ -4,7 +4,8 @@
  * The jira-changelog CLI
  */
 
-import "@babel/polyfill";
+import "core-js/stable";
+import "regenerator-runtime/runtime";
 import 'source-map-support/register';
 import program from 'commander';
 import _ from 'lodash';
