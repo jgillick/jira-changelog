@@ -76,7 +76,7 @@ The token is the [API token](https://confluence.atlassian.com/cloud/api-tokens-9
 jira-changelog --range origin/prod...origin/master
 ```
 
-Assuming you deploy from a branch named `prod`, this will generate a changelog with all commits after the last production deploy to the current master version (You can change the default branch names with the [sourceControl.defaultRange]((https://github.com/jgillick/jira-changelog/blob/master/) object, in your config).
+Assuming you deploy from a branch named `prod`, this will generate a changelog with all commits after the last production deploy to the current master version (You can change the default branch names with the [`sourceControl.defaultRange`](https://github.com/jgillick/jira-changelog/blob/master/) object, in your config).
 
 ```bash
 jira-changelog
