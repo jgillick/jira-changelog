@@ -14,7 +14,7 @@ import path from 'path';
 import Slack from './Slack';
 import Entities from 'html-entities';
 
-import {readConfigFile, CONF_FILENAME} from './Config';
+import {readConfigFile} from './Config';
 import SourceControl from './SourceControl';
 import Jira from './Jira';
 
@@ -24,7 +24,7 @@ runProgram();
  * Parse command line arguments
  */
 function commandLineArgs() {
-  const pkg = require('../package.json');
+  const pkg = require('../../package.json');
   program
     .version(pkg.version)
     .option(
@@ -66,15 +66,7 @@ async function runProgram() {
     }
     gitPath = path.resolve(gitPath);
 
-    // Config file path
-    var configPath;
-    if (program.config) {
-      configPath = path.resolve(program.config);
-    } else {
-      configPath = path.join(gitPath, CONF_FILENAME);
-    }
-
-    const config = readConfigFile(configPath);
+    const config = readConfigFile(gitPath);
     const jira = new Jira(config);
     const source = new SourceControl(config);
 

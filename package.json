@@ -5,15 +5,15 @@
   "repository": "https://github.com/jgillick/jira-changelog",
   "main": "dist/index.js",
   "bin": {
-    "jira-changelog": "dist/cli.js"
+    "jira-changelog": "dist/scripts/cli.js"
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "babel src --out-dir dist -s; cp changelog.config.js ./dist/",
+    "build": "babel src --out-dir dist/scripts -s; cp changelog.config.js ./dist/",
     "clean": "rm -r dist || true",
-    "test": "mocha",
+    "test": "jest",
     "prepare": "npm run build"
   },
   "author": "Jeremy Gillick",
@@ -21,7 +21,8 @@
   "devDependencies": {
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.8.4",
-    "@babel/preset-env": "^7.8.4"
+    "@babel/preset-env": "^7.8.4",
+    "jest": "^25.1.0"
   },
   "dependencies": {
     "commander": "^2.20.0",

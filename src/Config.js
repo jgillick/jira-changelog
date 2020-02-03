@@ -7,11 +7,12 @@
 
 import fs from 'fs';
 import path from 'path';
+import program from 'commander';
 
 /**
  * Default config object
  */
-import defaultConfig from './changelog.config.js';
+import defaultConfig from '../changelog.config.js';
 
 
 /**
@@ -22,19 +23,34 @@ export const CONF_FILENAME = 'changelog.config.js';
 
 /**
  * Return the default config object.
+ * @return {Object}
  */
 export function getDefaultConfig() {
   return defaultConfig;
 }
 
 /**
+ * Return the path to the config file
+ * @param {String} cwd - The current directory
+ * @return {String}
+ */
+export function configFilePath(cwd) {
+  // Passed in on the command line
+  if (program.config) {
+    return path.resolve(program.config);
+  }
+  return path.join(cwd, CONF_FILENAME);
+}
+
+/**
  * Reads the config file, merges it with the default values and returns the object.
  *
- * @param {String} configPath - The path to the config file.
+ * @param {String} cwd - The current directory
  * @return {Object} Configuration object.
  */
-export function readConfigFile(configPath) {
+export function readConfigFile(cwd) {
   let localConf = {};
+  const configPath = configFilePath(cwd);
 
   try {
     // Check if file exists
@@ -48,10 +64,21 @@ export function readConfigFile(configPath) {
     }
   }
 
-  // Merge first level with default
-  Object.keys(defaultConfig).forEach((key) => {
-    const defVal = defaultConfig[key];
+  localConf = defaultValues(localConf, defaultConfig);
+  return localConf;
+}
 
+/**
+ * Add the default values into the config object
+ *
+ * @param {Object} config - The config object to merge with the default values.
+ * @param {Object} defaults - The default object
+ * @return {Object}
+ */
+export function defaultValues(config, defaults) {
+  const localConf = { ...config };
+
+  Object.entries(defaults).forEach(([key, defVal]) => {
     if (typeof defVal === 'object' && !Array.isArray(defVal)) {
       localConf[key] = Object.assign({}, defVal, localConf[key] || {});
     }
@@ -62,5 +89,3 @@ export function readConfigFile(configPath) {
 
   return localConf;
 }
-
-
