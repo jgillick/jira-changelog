@@ -123,9 +123,9 @@ Pending Approval
   * <%= jira.baseUrl + '/browse/' + ticket.key %>
 <% }); -%>
 <% }); -%>
-<% if (!tickets.pendingByOwner.length) {%> ~ None. Yay! ~ <% } %>
+<% if (!tickets.pendingByOwner.length) {%> ~ None. Yay! ~ <% } -%>
 
-<% if (tickets.reverted.length) { -%>
+<% if (tickets.reverted.length) { %>
 Reverted
 ---------------------
 <% tickets.reverted.forEach((ticket) => { -%>

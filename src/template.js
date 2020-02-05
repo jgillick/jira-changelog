@@ -40,7 +40,6 @@ export function filterRevertedCommits(logs) {
   // Track reverted commits, and only keep one of the commits (orig or reverter)
   const reduced = logs.reduce((acc, log) => {
     if (log.reverted) {
-      console.log('FOUND REVERT!');
       // If the commit we're reverting is in the list, remove the revert commit
       const revertedCommit = commitHash[log.reverted]
       if (revertedCommit) {
