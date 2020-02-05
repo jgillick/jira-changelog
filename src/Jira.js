@@ -55,36 +55,33 @@ export default class Jira {
    * @param {String} releaseVersion - The name of the release version to create.
    * @return {Object}
    */
-  async generate(commitLogs, releaseVersion) {
+  async generate(commitLogs, releaseVersion=null) {
     const logs = [];
     this.releaseVersions = [];
     try {
 
-      const promises = commitLogs.map((commit) => {
-        return this.findJiraInCommit(commit, releaseVersion)
-          .then((log) => { logs.push(log); });
-      });
+      const promises = commitLogs.map((commit) => (
+        this.findJiraInCommit(commit, releaseVersion)
+          .then((log) => { logs.push(log); })
+          .catch((e) => { console.error(e); })
+      ));
       promises.push(Promise.resolve()); // ensure at least one
+      await Promise.all(promises);
 
-      return Promise.all(promises)
-        // Add to release version
-        .then(() => {
+      // Get all Jira tickets (filter out duplicates by keying on ID)
+      let ticketsHash = {};
+      let ticketsList = [];
+      logs.forEach((log) => {
+        log.tickets.forEach(ticket => ticketsHash[ticket.id] = ticket);
+      });
+      ticketsList = Object.keys(ticketsHash).map(k => ticketsHash[k]);
 
-          // Get all Jira tickets (filter out duplicates by keying on ID)
-          let ticketsHash = {};
-          let ticketsList = [];
-          logs.forEach((log) => {
-            log.tickets.forEach(ticket => ticketsHash[ticket.id] = ticket);
-          });
-          ticketsList = Object.keys(ticketsHash).map(k => ticketsHash[k]);
+      // If there are Jira tickets, create a release for them
+      if (ticketsList.length && releaseVersion) {
+        return this.addTicketsToReleaseVersion(ticketsList, releaseVersion).then(() => logs);
+      }
 
-          // If there are Jira tickets, create a release for them
-          if (ticketsList.length && releaseVersion) {
-            return this.addTicketsToReleaseVersion(ticketsList, releaseVersion).then(() => logs);
-          }
-
-          return logs;
-        });
+      return logs;
     } catch(e) {
       throw new Error(e);
     }
@@ -98,48 +95,40 @@ export default class Jira {
    * @param {String} releaseVersion - Release version eg, mobileweb-1.8.0
    * @return {Promsie} Resolves to an object with a jira array property
    */
-  findJiraInCommit(commitLog) {
-    const log = Object.assign({tickets: []}, commitLog);
+  async findJiraInCommit(commitLog) {
+    const log = Object.assign({tickets: []}, { ...commitLog } );
     const promises = [];
     const found = {};
 
-    const configPattern = this.config.jira.ticketIDPattern;
-    const ticketPattern = new RegExp(configPattern.source, configPattern.flags.replace('g', ''));
-
     // Search for jira ticket numbers in the commit text
-    const tickets = this.getTickets(log);
-    tickets.forEach((ticketMatch) => {
-
-      // Get the ticket key, and skip loading if we already got this one
-      let key = ticketMatch.match(ticketPattern);
-      key = (key.length > 1) ? key[1] : key[0];
-      if (!key) {
-        return;
-      }
-      key = key.toUpperCase();
+    const ticketKeys = this.parseTicketsFromString(log.fullText);
+    ticketKeys.forEach((key) => {
+      // Skip loading if we're loading this one
       if (found[key]){
         return;
       }
       found[key] = true;
 
       promises.push(
-        this.getJiraTicketForCommit(log, key).catch(() => {}) // ignore errors
+        this.fetchJiraTicket(key).catch(() => {}) // ignore errors
       );
     });
 
-    // Resolve log when all jira promises are done
-    return Promise.all(promises).then(() => log);
+    // Add jira tickets to log
+    const tickets = await Promise.all(promises);
+    log.tickets = tickets.filter(t => (t && this.includeTicket(t)))
+
+    return log;
   }
 
   /**
-   * Load a Jira issue ticket for a commit object
+   * Load a Jira issue ticket from the API.
    *
-   * @param {Object} commitLog - Commit log object
    * @param {String} ticketKey - The Jira ticket ID key
    *
    * @return {Promise}
    */
-  getJiraTicketForCommit(commitLog, ticketKey) {
+  fetchJiraTicket(ticketKey) {
     if (!ticketKey) {
       return Promise.resolve();
     }
@@ -156,14 +145,6 @@ export default class Jira {
       this.ticketPromises[ticketKey] = promise;
     }
 
-    // Add to commit
-    promise.then((ticket) => {
-      if (this.includeTicket(ticket)) {
-        commitLog.tickets.push(ticket);
-        return ticket;
-      }
-    });
-
     return promise;
   }
 
@@ -179,14 +160,12 @@ export default class Jira {
     this.releaseVersions = [];
 
     // Create version and add it to a ticket
-    function updateTicketVersion(ticket) {
+    async function updateTicketVersion(ticket) {
       const project = ticket.fields.project.key;
 
       // Create version on project
-      let verPromise;
-      if (versionPromises[project]) {
-        verPromise = versionPromises[project];
-      } else {
+      let verPromise = versionPromises[project];
+      if (!verPromise) {
         verPromise = this.createProjectVersion(versionName, project);
         versionPromises[project] = verPromise;
 
@@ -198,14 +177,14 @@ export default class Jira {
       }
 
       // Add version to ticket
-      return verPromise
-        .then((versionObj) => {
-          const { fixVersions} = ticket.fields;
-          fixVersions.push({ name: versionObj.name });
-          return this.jira.updateIssue(ticket.id, {
-            fields: { fixVersions }
-          })
-        });
+      const versionObj = await verPromise;
+      const { fixVersions } = ticket.fields;
+      fixVersions.push({ name: versionObj.name });
+
+      const result = await this.jira.updateIssue(ticket.id, {
+        fields: { fixVersions }
+      });
+      return result;
     }
 
     // Loop through tickets and throttle the promises.
@@ -213,7 +192,11 @@ export default class Jira {
       return promiseThrottle
         .add(updateTicketVersion.bind(this, ticket))
         .catch((err) => {
-          console.log(JSON.stringify(err, null, '  '));
+          if (err instanceof Error) {
+            console.log(err);
+          } else {
+            console.log(JSON.stringify(err, null, '  '));
+          }
           console.log(`Could not assign ticket ${ticket.key} to release '${versionName}'!`);
         });
     });
@@ -271,23 +254,41 @@ export default class Jira {
    * @returns {Boolean}
    */
   includeTicket(ticket) {
+    if (!ticket.fields) {
+      return false;
+    }
+
     const type = ticket.fields.issuetype.name;
-    if (Array.isArray(this.config.jira.includeIssueTypes) && this.config.jira.includeIssueTypes.length) {
-      return this.config.jira.includeIssueTypes.includes(type);
+    const {includeIssueTypes, excludeIssueTypes} = this.config.jira;
+    if (Array.isArray(includeIssueTypes) && includeIssueTypes.length) {
+      return includeIssueTypes.includes(type);
     }
-    else if (Array.isArray(this.config.jira.excludeIssueTypes)) {
-      return !this.config.jira.excludeIssueTypes.includes(type);
+    else if (Array.isArray(excludeIssueTypes)) {
+      return !excludeIssueTypes.includes(type);
     }
+    return true;
   }
 
   /**
-   * Gets all tickets associated with a commit
-   * @param   {Object} log - A commit's log object
-   * @returns {Array} List of tickets in commit
+   * Parse the JIRA ticket keys embedded in a string.
+   * @param   {Object} str - The string to parse them out of.
+   * @returns {Array} List of tickets
    */
-  getTickets(log) {
+  parseTicketsFromString(str) {
     const configPattern = this.config.jira.ticketIDPattern;
     const searchPattern = new RegExp(configPattern.source, `${configPattern.flags || ''}g`);
-    return log.fullText.match(searchPattern) || [];
+    const matches = str.match(searchPattern) || [];
+
+    // Extract ticket from pattern
+    return matches
+      .map((match) => {
+        let key = match.match(configPattern);
+        key = (key.length > 1) ? key[1] : key[0];
+        if (!key) {
+          return null;
+        }
+        return key.toUpperCase();
+      })
+      .filter(m => !!m);
   }
 }

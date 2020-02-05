@@ -60,7 +60,7 @@ export default class SourceControl {
           revision: '%H',
           date: '%ai',
           summary: '%s%d',
-          fullText: '%s%d%b',
+          fullText: '%s\n%d\n%b',
           authorName: '%aN',
           authorEmail: '%ae',
           parents: '%P'
@@ -93,6 +93,40 @@ export default class SourceControl {
         });
       });
     });
+  }
+
+  /**
+   * Determine if a commit is a revert.
+   * If a log is a "revert of a revert", if will not be marked as a
+   * revert because it is assumed to be truly an "unrevert".
+   *
+   * Unfortunately git does not add any revert metadata to a revision,
+   * so to detect a revert we look for the default text added by git:
+   *    "This reverts commit <sha>."
+   *
+   * If we wanted to get really clever, we could fetch the revision this commit
+   * reverts and confirm the diff is exactly the opposite, but that might be overkill.
+   *
+   * @param {Object} log - A single commit log objedt
+   * @return {String or null} - The reverted sha or null if it is not a revert
+   */
+  isRevert(log) {
+    const oneLine = log.fullText.replace(/\n/g, ' ').trim();
+    const match = oneLine.match(/^Revert ".*?This reverts commit ([0-9a-z]+)\.$/);
+
+    // Is it a revert
+    if (match) {
+      const [, revertSha] = match;
+
+      // If the summary has an even number of reverts listed, it has been unreverted
+      const revertSummary = log.summary.match(/^(Revert ")+/g);
+      const numReverts = revertSummary[0].match(/Revert/g).length;
+      if (numReverts % 2 !== 0) {
+        return revertSha;
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -150,16 +184,20 @@ export default class SourceControl {
     const graph = [];
 
     // First get the hashes from all commits and turn parents into an array
+    // and decorate each log with the 'reverted' property
     const logObjs = logs.map((l) => {
       const log = { ...l };
       const parents = log.parents.split(' ');
 
-      // Create log object
+      // Create log graph
       log.graph = {
         prev: parents[0],
         parents: parents.slice(1),
         merged: [],
       };
+
+      // Decorate it with the revert property
+      log.reverted = this.isRevert(log);
 
       hashes[log.revision] = log;
       return log;
@@ -206,6 +244,9 @@ export default class SourceControl {
    * Given the commit graph (see simpleTopLevelGraph), combine all merged commit
    * messages (summary/fullText) strings into a single string at the merge commit.
    *
+   * NOTE: reverted commit messages will not be included, as their message is now no
+   * longer valid.
+   *
    * For example, with this git graph:
    *    1
    *    2
@@ -226,6 +267,10 @@ export default class SourceControl {
       let { summary, fullText } = item;
 
       item.graph.merged.forEach((merged) => {
+        // Skip reverted commits
+        if (merged.reverted) {
+          return;
+        }
         summary += `\n${merged.summary.trim()}`;
         fullText += `\n${merged.fullText.trim()}`;
       });
