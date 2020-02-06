@@ -111,7 +111,7 @@ Jira Tickets
 Other Commits
 ---------------------
 <% commits.noTickets.forEach((commit) => { -%>
-  * <%= commit.slackUser ? '@'+commit.slackUser.name : commit.authorName %> - <<%= commit.revision.substr(0, 7) %>> - <%= commit.summary.substr(0,150) -%>
+  * <%= commit.slackUser ? '@'+commit.slackUser.name : commit.authorName %> - <<%= commit.revision.substr(0, 7) %>> - <%= commit.summary %>
 <% }); -%>
 <% if (!commits.noTickets.length) {%> ~ None ~ <% } %>
 
