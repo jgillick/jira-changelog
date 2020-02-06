@@ -29,7 +29,7 @@ module.exports = {
     approvalStatus: ['Done', 'Closed', 'Accepted'],
 
     // Tickets to exclude from the changelog, by type name
-    excludeIssueTypes: ['Sub-task'],
+    excludeIssueTypes: ['Sub-task', 'Story Bug'],
 
     // Tickets to include in changelog, by type name.
     // If this is defined, `excludeIssueTypes` is ignored.
