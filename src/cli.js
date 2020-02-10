@@ -12,7 +12,7 @@ import path from 'path';
 import Slack from './Slack';
 import Entities from 'html-entities';
 
-import { renderTemplate } from './template';
+import { generateTemplateData, renderTemplate } from './template';
 import {readConfigFile} from './Config';
 import SourceControl from './SourceControl';
 import Jira from './Jira';
@@ -84,7 +84,8 @@ async function runProgram() {
     const changelog = await jira.generate(commitLogs, program.release);
 
     // Render template
-    const changelogMessage = await renderTemplate(config, changelog, jira.releaseVersions);
+    const tmplData = await generateTemplateData(config, changelog, jira.releaseVersions);
+    const changelogMessage = renderTemplate(config, tmplData);
 
     // Output to console
     const entitles = new Entities.AllHtmlEntities();
@@ -92,7 +93,7 @@ async function runProgram() {
 
     // Post to slack
     if (program.slack) {
-      postToSlack(config, data, changelogMessage);
+      postToSlack(config, tmplData, changelogMessage);
     }
   } catch(e) {
     console.error('Error: ', e.stack);
@@ -128,7 +129,7 @@ async function postToSlack(config, data, changelogMessage) {
     console.log('Done');
 
   } catch(e) {
-    console.log('Error: ', e.stack);
+    console.log('Error: ', e);
   }
 }
 

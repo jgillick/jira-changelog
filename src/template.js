@@ -205,14 +205,15 @@ export function transformCommitLogs(config, logs) {
 }
 
 /**
- * Render the changelog template
+ * Create data object for the changelog template
  *
  * @param {Object} config - The configuration object
  * @param {Array} changelog - The changelog list.
  * @param {Array} releaseVersions - Jira release versions for this changelog.
+ *
+ * @return {String}
  */
-export async function renderTemplate(config, changelog, releaseVersions) {
-  // Template data template
+export async function generateTemplateData(config, changelog, releaseVersions) {
   let data = await transformCommitLogs(config, changelog);
   if (typeof config.transformData == 'function') {
     data = await Promise.resolve(config.transformData(data));
@@ -222,6 +223,17 @@ export async function renderTemplate(config, changelog, releaseVersions) {
     releaseVersions: releaseVersions,
   };
 
-  // Render
+  return data;
+}
+
+/**
+ * Render the changelog template and provide output.
+ *
+ * @param {Object} config - The configuration object
+ * @param {Array} data - Template data created by `generateTemplateData()`
+ *
+ * @return {String}
+ */
+export function renderTemplate(config, data) {
   return ejs.render(config.template, data);
 }

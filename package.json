@@ -1,9 +1,9 @@
 {
   "name": "jira-changelog",
-  "version": "1.6.0-beta.0",
+  "version": "1.6.0-beta.1",
   "description": "Generates a changelog by matching git commits to Jira tickets.",
   "repository": "https://github.com/jgillick/jira-changelog",
-  "main": "dist/index.js",
+  "main": "dist/scripts/index.js",
   "bin": {
     "jira-changelog": "dist/scripts/cli.js"
   },
