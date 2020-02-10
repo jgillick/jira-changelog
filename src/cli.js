@@ -93,11 +93,11 @@ async function runProgram() {
 
     // Post to slack
     if (program.slack) {
-      postToSlack(config, tmplData, changelogMessage);
+      await postToSlack(config, tmplData, changelogMessage);
     }
   } catch(e) {
-    console.error('Error: ', e.stack);
-    console.log(e.message);
+    console.error(e.stack || e);
+    process.exit(1);
   }
 }
 
@@ -112,7 +112,7 @@ async function postToSlack(config, data, changelogMessage) {
   const slack = new Slack(config);
 
   if (!slack.isEnabled() || !config.slack.channel) {
-    console.error('Error: Slack is not configured.');
+    throw new Error('Error: Slack is not configured.');
     return;
   }
 
@@ -126,10 +126,10 @@ async function postToSlack(config, data, changelogMessage) {
 
     // Post to slack
     await slack.postMessage(changelogMessage, config.slack.channel);
-    console.log('Done');
+    console.log('Sent');
 
-  } catch(e) {
-    console.log('Error: ', e);
+  } catch(err) {
+    throw new Error(err);
   }
 }
 
