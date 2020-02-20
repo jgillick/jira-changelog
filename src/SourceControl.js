@@ -242,7 +242,7 @@ export default class SourceControl {
 
   /**
    * Given the commit graph (see simpleTopLevelGraph), combine all merged commit
-   * messages (summary/fullText) strings into a single string at the merge commit.
+   * messages (fullText only) strings into a single string at the merge commit.
    *
    * NOTE: reverted commit messages will not be included, as their message is now no
    * longer valid.
@@ -271,11 +271,9 @@ export default class SourceControl {
         if (merged.reverted) {
           return;
         }
-        summary += `\n${merged.summary.trim()}`;
         fullText += `\n${merged.fullText.trim()}`;
       });
 
-      item.summary = summary.trim();
       item.fullText = fullText.trim();
     });
 
