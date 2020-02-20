@@ -1,6 +1,6 @@
 {
   "name": "jira-changelog",
-  "version": "1.6.0-beta.1",
+  "version": "1.6.0",
   "description": "Generates a changelog by matching git commits to Jira tickets.",
   "repository": "https://github.com/jgillick/jira-changelog",
   "main": "dist/scripts/index.js",
@@ -36,7 +36,6 @@
     "node-fetch": "^2.6.0",
     "promise-throttle": "^1.0.1",
     "regenerator-runtime": "^0.13.3",
-    "request": "^2.88.0",
     "simple-git": "^1.131.0",
     "source-map-support": "^0.5.16"
   }
