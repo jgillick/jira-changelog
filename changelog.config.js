@@ -29,7 +29,7 @@ module.exports = {
     approvalStatus: ['Done', 'Closed', 'Accepted'],
 
     // Tickets to exclude from the changelog, by type name
-    excludeIssueTypes: ['Sub-task'],
+    excludeIssueTypes: ['Sub-task', 'Story Bug'],
 
     // Tickets to include in changelog, by type name.
     // If this is defined, `excludeIssueTypes` is ignored.
@@ -102,27 +102,37 @@ Release version: <%= jira.releaseVersions[0].name -%>
 
 Jira Tickets
 ---------------------
-<% tickets.all.forEach((ticket) => { %>
+<% tickets.all.filter((t) => !t.reverted).forEach((ticket) => { -%>
   * <<%= ticket.fields.issuetype.name %>> - <%- ticket.fields.summary %>
     [<%= ticket.key %>] <%= jira.baseUrl + '/browse/' + ticket.key %>
 <% }); -%>
-<% if (!tickets.all.length) {%> ~ None ~ <% } %>
+<% if (!tickets.all.filter((t) => !t.reverted).length) {%> ~ None ~ <% } %>
 
 Other Commits
 ---------------------
-<% commits.noTickets.forEach((commit) => { %>
-  * <%= commit.slackUser ? '@'+commit.slackUser.name : commit.authorName %> - <<%= commit.revision.substr(0, 7) %>> - <%= commit.summary -%>
+<% commits.noTickets.forEach((commit) => { -%>
+  * <%= commit.slackUser ? '@'+commit.slackUser.name : commit.authorName %> - <<%= commit.revision.substr(0, 7) %>> - <%= commit.summary %>
 <% }); -%>
 <% if (!commits.noTickets.length) {%> ~ None ~ <% } %>
 
 Pending Approval
 ---------------------
-<% tickets.pendingByOwner.forEach((owner) => { %>
+<% tickets.pendingByOwner.forEach((owner) => { -%>
 <%= (owner.slackUser) ? '@'+owner.slackUser.name : owner.email %>
 <% owner.tickets.forEach((ticket) => { -%>
   * <%= jira.baseUrl + '/browse/' + ticket.key %>
 <% }); -%>
 <% }); -%>
-<% if (!tickets.pendingByOwner.length) {%> ~ None. Yay! ~ <% } %>
+<% if (!tickets.pendingByOwner.length) {%> ~ None. Yay! ~ <% } -%>
+
+<% if (tickets.reverted.length) { %>
+Reverted
+---------------------
+<% tickets.reverted.forEach((ticket) => { -%>
+  * <<%= ticket.fields.issuetype.name %>> - <%- ticket.fields.summary %>
+    [<%= ticket.key %>] <%= jira.baseUrl + '/browse/' + ticket.key %>
+    commit: <%= ticket.reverted %>
+<% }); -%>
+<% } -%>
 `
 };
