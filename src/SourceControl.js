@@ -65,6 +65,7 @@ export default class SourceControl {
           authorEmail: '%ae',
           parents: '%P'
         },
+        symmetric: false,
         ...range,
       }
 
