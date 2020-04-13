@@ -10,7 +10,7 @@ import 'source-map-support/register';
 import program from 'commander';
 import path from 'path';
 import Slack from './Slack';
-import Entities from 'html-entities';
+import { AllHtmlEntities } from 'html-entities';
 
 import { generateTemplateData, renderTemplate } from './template';
 import {readConfigFile} from './Config';
@@ -88,7 +88,7 @@ async function runProgram() {
     const changelogMessage = renderTemplate(config, tmplData);
 
     // Output to console
-    const entitles = new Entities.AllHtmlEntities();
+    const entitles = new AllHtmlEntities();
     console.log(entitles.decode(changelogMessage));
 
     // Post to slack

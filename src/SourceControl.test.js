@@ -176,7 +176,7 @@ describe('Build history graph', () => {
 
   test('Commit messages are combined from merged commits.', () => {
     const rev5 = combinedMessages.find(i => i.revision === '5');
-    const expectSummary = ['rev 5', 'rev 2b', 'rev 2a'].join('\n');
+    const expectSummary = ['rev 5'].join('\n');
     const expectFull = ['Full rev 5', 'Full rev 2b', 'Full rev 2a'].join('\n');
 
     expect(rev5.summary).toEqual(expectSummary);
@@ -229,7 +229,7 @@ describe('Decorate reverts', () => {
 
     // Rev 2b should not be inlcuded
     const rev5 = combinedMessages.find(i => i.revision === '5');
-    const expectSummary = ['rev 5', 'rev 2a'].join('\n');
+    const expectSummary = ['rev 5'].join('\n');
     const expectFull = ['Full rev 5', 'Full rev 2a'].join('\n');
     expect(rev5.summary).toEqual(expectSummary);
     expect(rev5.fullText).toEqual(expectFull);
