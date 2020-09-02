@@ -46,6 +46,14 @@ The script looks for Jira issue keys, surrounded by square brackets (i.e. `[DEV-
 npm install -g jira-changelog
 ```
 
+## Build locally
+
+```bash
+npm install
+npm run build
+npm install -g .
+```
+
 ### JIRA setup
 
 Before configuring the app, register a new user in Jira for the app to use to retrieve and update tickets. Then create an [Auth Token](https://confluence.atlassian.com/cloud/api-tokens-938839638.html) for this user, which will be used for authentication. Jira no longer supports authenticating with password for API calls.

@@ -84,12 +84,13 @@ async function runProgram() {
     const changelog = await jira.generate(commitLogs, program.release);
 
     // Render template
+    const entitles = new AllHtmlEntities();
     const tmplData = await generateTemplateData(config, changelog, jira.releaseVersions);
-    const changelogMessage = renderTemplate(config, tmplData);
+    let changelogMessage = renderTemplate(config, tmplData);
+    changelogMessage = entitles.decode(changelogMessage)
 
     // Output to console
-    const entitles = new AllHtmlEntities();
-    console.log(entitles.decode(changelogMessage));
+    console.log(changelogMessage);
 
     // Post to slack
     if (program.slack) {

@@ -166,10 +166,11 @@ export default class Slack {
         {
           text,
           channel,
-          parse: 'full',
+          link_names: true,
           username: self.config.slack.username,
           icon_emoji: self.config.slack.icon_emoji,
-          icon_url: self.config.slack.icon_url
+          icon_url: self.config.slack.icon_url,
+          ...self.config.slack.postArgs,
         }).then((response) => {
           if (response && !response.ok) {
             throw response.error;

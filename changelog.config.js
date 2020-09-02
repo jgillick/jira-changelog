@@ -62,7 +62,11 @@ module.exports = {
 
     // URL to an image to use as the icon for the bot.
     // Cannot be used at the same time as `icon_emoji`
-    icon_url: undefined
+    icon_url: undefined,
+
+    // Additional arguments to pass to the slack api
+    // Full list: https://api.slack.com/methods/chat.postMessage#arguments
+    postArgs: {},
   },
 
   // Github settings
