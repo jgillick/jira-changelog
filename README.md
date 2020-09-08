@@ -164,3 +164,52 @@ source.getCommitLogs(gitRepoPath, range).then((commitLogs) => {
 
 });
 ```
+
+## Tips & Tricks
+
+### Change the output
+The output of the changelog is controlled by an [ejs](http://ejs.co/) template defined in your `changelog.config.js` file. You can see the default template, here:
+https://github.com/jgillick/jira-changelog/blob/master/changelog.config.js#L95-L136
+
+The data sent to the template looks like this:
+```
+{
+  jira: {
+    baseUrl: "...",
+    releaseVersions: [],
+  },
+  commits: {
+    all: [],       // all commits
+    tickets: [],   // commits associated with jira tickets
+    noTickets: [], // commits not associated with jira tickets
+  },
+  tickets: {
+    all: [],       // all tickets
+    approved: [],  // tickets marked as approved
+    pending: [],   // tickets not marked as approved
+    pendingByOwner: [], // pending tickets arranged under ticket reporters.
+  }
+}
+```
+
+The template should output data only, not perform data transformations. For that, define the `transformData` or `transformForSlack` functions.
+
+### Custom data transformation
+What if you want to edit the git commit log messages to automatically add links around the ticket numbers? You can do that, and more, by defining the `transformData` function inside your `changelog.config.js` file. This function can transform all the template data, before it is sent to the template.
+
+For example, adding a link around all ticket numbers in the git logs would look something like this (overly simplistic, for example only):
+
+```js
+transformData: (data) => {
+  // Link the ticket numbers in all commit summaries.
+  data.commits.all.forEach((commit) => {
+    commit.summary = commit.summary.replace(
+      /\[([A-Z]+\-[0-9]+)\]/,
+      '[<a href="https://YOU.atlassian.net/browse/$1">$1</a>]'
+    );
+  });
+  return data;
+},
+```
+
+Then, if you want to create slack specific data transformations, define the `transformForSlack` function. This function will be called after `transformData`.
