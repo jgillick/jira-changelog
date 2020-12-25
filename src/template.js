@@ -222,6 +222,9 @@ export async function generateTemplateData(config, changelog, releaseVersions) {
     baseUrl: config.jira.baseUrl,
     releaseVersions: releaseVersions,
   };
+  data.options = {
+    hideEmptyBlocks: !!config.hideEmptyBlocks,
+  };
 
   return data;
 }

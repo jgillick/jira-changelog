@@ -77,8 +77,11 @@ module.exports = {
     }
   },
 
+  // Possible to hide "~ None ~" blocks in template if set to true
+  hideEmptyBlocks: false,
+
   // Transforms the basic changelog data before it goes to the template.
-  //  data - The changlelog data.
+  //  data - The changelog data.
   transformData: function(data) {
     return Promise.resolve(data);
   },
@@ -99,32 +102,40 @@ Release version: <%= jira.releaseVersions[0].name -%>
   * <%= release.projectKey %>: <%= jira.baseUrl + '/projects/' + release.projectKey + '/versions/' + release.id -%>
 <% }); -%>
 <% } %>
+<% blockTickets = tickets.all.filter((t) => !t.reverted); -%>
+<% if (blockTickets.length > 0 || !options.hideEmptyBlocks) { -%>
 
 Jira Tickets
 ---------------------
-<% tickets.all.filter((t) => !t.reverted).forEach((ticket) => { -%>
+<% blockTickets.forEach(ticket => { -%>
   * <<%= ticket.fields.issuetype.name %>> - <%- ticket.fields.summary %>
     [<%= ticket.key %>] <%= jira.baseUrl + '/browse/' + ticket.key %>
 <% }); -%>
-<% if (!tickets.all.filter((t) => !t.reverted).length) {%> ~ None ~ <% } %>
+<% if (!blockTickets.length) {%> ~ None ~ <% } %>
+<% } -%>
+<% blockNoTickets = commits.noTickets; -%>
+<% if (blockNoTickets.length > 0 || !options.hideEmptyBlocks) { -%>
 
 Other Commits
 ---------------------
-<% commits.noTickets.forEach((commit) => { -%>
+<% blockNoTickets.forEach(commit => { -%>
   * <%= commit.slackUser ? '@'+commit.slackUser.name : commit.authorName %> - <<%= commit.revision.substr(0, 7) %>> - <%= commit.summary %>
 <% }); -%>
-<% if (!commits.noTickets.length) {%> ~ None ~ <% } %>
+<% if (!blockNoTickets.length) {%> ~ None ~ <% } %>
+<% } -%>
+<% blockPendingByOwner = tickets.pendingByOwner; -%>
+<% if (blockPendingByOwner.length > 0 || !options.hideEmptyBlocks) { -%>
 
 Pending Approval
 ---------------------
-<% tickets.pendingByOwner.forEach((owner) => { -%>
+<% blockPendingByOwner.forEach(owner => { -%>
 <%= (owner.slackUser) ? '@'+owner.slackUser.name : owner.email %>
 <% owner.tickets.forEach((ticket) => { -%>
   * <%= jira.baseUrl + '/browse/' + ticket.key %>
 <% }); -%>
 <% }); -%>
-<% if (!tickets.pendingByOwner.length) {%> ~ None. Yay! ~ <% } -%>
-
+<% if (!blockPendingByOwner.length) {%> ~ None. Yay! ~ <% } -%>
+<% } -%>
 <% if (tickets.reverted.length) { %>
 Reverted
 ---------------------

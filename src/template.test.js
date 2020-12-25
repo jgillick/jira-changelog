@@ -4,8 +4,9 @@ import {
   decorateTicketReverts,
   getTicketReporters,
   groupTicketsByStatus,
-  transformCommitLogs,
+  transformCommitLogs, generateTemplateData, renderTemplate,
 } from './template';
+import {getDefaultConfig} from "./Config";
 
 describe('filter reverts', () => {
   test('the revert commit is removed when the original commit is in the list', () => {
@@ -211,7 +212,7 @@ describe('Get pending tickets', () => {
 });
 
 // Pull it all together
-test('transfor commit logs into template data', () => {
+test('transform commit logs into template data', () => {
   const createTicket = (key, reporter, status) => (
     {
       key,
@@ -283,4 +284,26 @@ test('transfor commit logs into template data', () => {
   expect(tickets.pending.length).toBe(4);
   expect(tickets.pendingByOwner.length).toBe(3);
   expect(tickets.reverted.length).toBe(2);
+});
+
+test('hideEmptyBlocks with false', async () => {
+  const config = {
+    ...getDefaultConfig(),
+    hideEmptyBlocks: false,
+  };
+  const templateData = await generateTemplateData(config, [], []);
+  const templateRendered = renderTemplate(config, templateData);
+
+  expect(templateRendered).toContain('~ None ~');
+});
+
+test('hideEmptyBlocks with true', async () => {
+  const config = {
+    ...getDefaultConfig(),
+    hideEmptyBlocks: true,
+  };
+  const templateData = await generateTemplateData(config, [], []);
+  const templateRendered = renderTemplate(config, templateData);
+
+  expect(templateRendered).not.toContain('~ None ~');
 });
