@@ -13,8 +13,9 @@
   "scripts": {
     "build": "babel src --out-dir dist/scripts -s; cp changelog.config.js ./dist/",
     "clean": "rm -r dist || true",
-    "test": "jest",
-    "prepare": "npm run build"
+    "test": "npm run build && jest dist",
+    "prepare": "npm run build",
+    "cli": "npm run build && node dist/scripts/cli.js"
   },
   "author": "Jeremy Gillick",
   "license": "MIT",
