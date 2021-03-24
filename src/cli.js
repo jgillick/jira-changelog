@@ -17,8 +17,6 @@ import {readConfigFile} from './Config';
 import SourceControl from './SourceControl';
 import Jira from './Jira';
 
-runProgram();
-
 /**
  * Parse command line arguments
  */
@@ -139,8 +137,17 @@ async function postToSlack(config, data, changelogMessage) {
  * @param {String} rangeStr - The range string.
  * @return {Array}
  */
-function parseRange(rangeStr) {
-  return rangeStr.split(/\.{3,3}/);
+export function parseRange(rangeStr) {
+  const parts = rangeStr.match(/([^.]+)(\.{2,3})?(.*)$/);
+  if (!parts) {
+    throw new Error('Invalid range.');
+  }
+
+  return {
+    from: parts[1],
+    to: parts[3],
+    symmetric: (parts[2] == '...'),
+  }
 }
 
 
@@ -154,14 +161,13 @@ function getRangeObject(config) {
   const range = {};
   const defaultRange = (config.sourceControl && config.sourceControl.defaultRange) ? config.sourceControl.defaultRange : {};
 
-  if (program.range && program.range.length) {
-    range.from = program.range[0];
-    range.to = program.range[1];
+  if (program.range && program.range.from) {
+    Object.assign(range, program.range);
   }
-  if (program.dateRange && program.dateRange.length) {
-    range.after = program.dateRange[0];
-    if (program.dateRange.length > 1) {
-      range.before = program.dateRange[1];
+  if (program.dateRange && program.dateRange.from) {
+    range.after = program.dateRange.from;
+    if (program.dateRange.to) {
+      range.before = program.dateRange.to;
     }
   }
 
@@ -173,5 +179,13 @@ function getRangeObject(config) {
   if (!Object.keys(range).length){
       throw new Error('No range defined for the changelog.');
   }
+
+  // Ensure symmetric is explicitly set
+  range.symmetric = !!range.symmetric;
   return range;
+}
+
+// Run program
+if (require.main === module) {
+  runProgram();
 }

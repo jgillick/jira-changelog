@@ -73,7 +73,12 @@ module.exports = {
     // and or after/before datestamps.
     defaultRange: {
       from: "origin/prod",
-      to: "origin/stage"
+      to: "origin/stage",
+
+      // symmetric='...'
+      // non-symmetric='..'
+      // https://matthew-brett.github.io/pydagogue/git_diff_dots.html
+      symmetric: false,
     }
   },
 

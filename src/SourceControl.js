@@ -65,8 +65,8 @@ export default class SourceControl {
           authorEmail: '%ae',
           parents: '%P'
         },
-        symmetric: false,
         ...range,
+        symmetric: range.symmetric,
       }
 
       workspace.log(opts, (err, response) => {
