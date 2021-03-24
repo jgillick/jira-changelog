@@ -86,7 +86,7 @@ export function getTicketReporters(tickets) {
   const reporters = {};
 
   tickets.forEach((ticket) => {
-    const { email, displayName } = ticket.fields.reporter;
+    const { email, displayName } = ticket.fields.reporter || [];
     if (!reporters[email]) {
       reporters[email] = {
         email,
