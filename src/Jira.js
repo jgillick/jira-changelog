@@ -38,13 +38,13 @@ export default class Jira {
 
     if (config.jira.api.host) {
       this.jira = new JiraApi({
-        ...options,
         host,
         username: email,
         password: token,
         protocol: 'https',
-        apiVersion: 2,
-        strictSSL: true
+        strictSSL: true,
+        ...options, // let user decide if they need to overwrite any of the hardcoded values (e.g. strictSSL or protocol)
+        apiVersion: 2, // forcing api version 2 to avoid breaking code by using different api version
       });
     } else {
       console.error('ERROR: Cannot configure Jira without a host configuration.');
