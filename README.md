@@ -63,7 +63,7 @@ module.exports = {
       host: 'myapp.atlassian.net',
       email: 'jirauser@myapp.com',
       token: 'qWoJBdlEp6pJy15fc9tGpsOOR2L5i35v',
-      options: {} // https://jira-node.github.io/typedef/index.html#static-typedef-JiraApiOptions
+      options: {} 
     },
   }
 }
