@@ -15,6 +15,10 @@ module.exports = {
       // Auth token of the user to login with
       // https://confluence.atlassian.com/cloud/api-tokens-938839638.html
       token: undefined,
+      // If you need to set some jira-client option use this object. 
+      // Keep in mind that the properties are prioritized (Using same key in options array would be ignored)
+      // Check jira-client docs for available options: https://jira-node.github.io/typedef/index.html#static-typedef-JiraApiOptions
+      options: {},
     },
 
     // Jira base web URL
