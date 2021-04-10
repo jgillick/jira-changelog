@@ -22,7 +22,7 @@ export default class Jira {
     this.ticketPromises = {};
 
     const { host, username, password} = config.jira.api;
-    let { email, token, originalOptions } = config.jira.api;
+    let { email, token, options } = config.jira.api;
 
     if (!token && typeof password !== 'undefined') {
       console.warn('WARNING: Jira password is deprecated. Use an API token instead.');
@@ -32,13 +32,13 @@ export default class Jira {
       console.warn('WARNING: Jira username is deprecated for API authentication. Use user email instead.');
       email = username
     }
-    if (!originalOptions) {
-      originalOptions = {}
+    if (!options) {
+      options = {}
     }
 
     if (config.jira.api.host) {
       this.jira = new JiraApi({
-        ...originalOptions,
+        ...options,
         host,
         username: email,
         password: token,
