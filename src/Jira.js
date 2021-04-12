@@ -22,7 +22,7 @@ export default class Jira {
     this.ticketPromises = {};
 
     const { host, username, password} = config.jira.api;
-    let { email, token } = config.jira.api;
+    let { email, token, options } = config.jira.api;
 
     if (!token && typeof password !== 'undefined') {
       console.warn('WARNING: Jira password is deprecated. Use an API token instead.');
@@ -32,6 +32,9 @@ export default class Jira {
       console.warn('WARNING: Jira username is deprecated for API authentication. Use user email instead.');
       email = username
     }
+    if (!options) {
+      options = {}
+    }
 
     if (config.jira.api.host) {
       this.jira = new JiraApi({
@@ -39,8 +42,9 @@ export default class Jira {
         username: email,
         password: token,
         protocol: 'https',
-        apiVersion: 2,
-        strictSSL: true
+        strictSSL: true,
+        ...options, // let user decide if they need to overwrite any of the hardcoded values (e.g. strictSSL or protocol)
+        apiVersion: 2, // forcing api version 2 to avoid breaking code by using different api version
       });
     } else {
       console.error('ERROR: Cannot configure Jira without a host configuration.');

@@ -62,13 +62,16 @@ module.exports = {
     api: {
       host: 'myapp.atlassian.net',
       email: 'jirauser@myapp.com',
-      token: 'qWoJBdlEp6pJy15fc9tGpsOOR2L5i35v'
+      token: 'qWoJBdlEp6pJy15fc9tGpsOOR2L5i35v',
+      options: {} 
     },
   }
 }
 ```
 
 The token is the [API token](https://confluence.atlassian.com/cloud/api-tokens-938839638.html) assigned to this user. To see all values supported, look at the [changelog.config.js](https://github.com/jgillick/jira-changelog/blob/master/changelog.config.js) file at the root of this repo.
+
+Use the options object to set [jira-client](https://www.npmjs.com/package/jira-client) options. See [official docs](https://jira-node.github.io/typedef/index.html#static-typedef-JiraApiOptions) for available options.
 
 ## Usage
 
