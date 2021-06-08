@@ -138,15 +138,29 @@ async function postToSlack(config, data, changelogMessage) {
  * @return {Array}
  */
 export function parseRange(rangeStr) {
-  const parts = rangeStr.match(/([^.]+)(\.{2,3})?(.*)$/);
-  if (!parts) {
-    throw new Error('Invalid range.');
+  let parts = ['', ''];
+  const space = 0;
+  if (rangeStr.includes('...')){
+    if (rangeStr.length <= 3){throw new Error('Invalid Range');}
+    parts = rangeStr.split('...');
+    let space = 3;
+  }
+  else if (rangeStr.includes('..')){
+    if (rangeStr.length <= 2){throw new Error('Invalid Range');}
+    parts = rangeStr.split('..');
+    let space = 2;
+  }
+  else if (rangeStr.length > 0){
+    parts[0] = rangeStr;
+  }
+  else {
+    throw new Error('Invalid Range');
   }
 
   return {
-    from: parts[1],
-    to: parts[3],
-    symmetric: (parts[2] == '...'),
+    from: parts[0],
+    to: parts[1],
+    symmetric: ((parts[0].length + parts[1].length + space) === rangeStr.length),
   }
 }
 
