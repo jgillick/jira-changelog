@@ -22,4 +22,16 @@ describe('parseRange', () => {
     test('invalid pattern', () => {
         expect(() => parseRange('...')).toThrow(Error);
     });
+    test('parses versions with decimal and 3 in between versions', () => {
+        const range = parseRange('v1.23...v2.12');
+        expect(range.from).toBe('v1.23');
+        expect(range.to).toBe('v2.12');
+        expect(range.symmetric).toBe(true);
+    });
+    test('parses versions with decimal and 2 in between versions', () => {
+        const range = parseRange('v1.23..v2.12');
+        expect(range.from).toBe('v1.23');
+        expect(range.to).toBe('v2.12');
+        expect(range.symmetric).toBe(false);
+    });
 })
