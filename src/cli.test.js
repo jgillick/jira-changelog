@@ -19,8 +19,11 @@ describe('parseRange', () => {
         expect(range.to).toBe('');
         expect(range.symmetric).toBe(false);
     });
-    test('invalid pattern', () => {
+    test('invalid pattern ...', () => {
         expect(() => parseRange('...')).toThrow(Error);
+    });
+    test('invalid pattern ..', () => {
+        expect(() => parseRange('..')).toThrow(Error);
     });
     test('parses versions with decimal and 3 in between versions', () => {
         const range = parseRange('v1.23...v2.12');

@@ -33,7 +33,7 @@
     "haikunator": "^2.1.2",
     "html-entities": "^1.3.1",
     "jira-client": "^6.16.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "node-fetch": "^2.6.0",
     "promise-throttle": "^1.0.1",
     "regenerator-runtime": "^0.13.5",
