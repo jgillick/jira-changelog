@@ -57,9 +57,10 @@ export default class Jira {
    *
    * @param {Array} commitLogs - A list of source control commit logs.
    * @param {String} releaseVersion - The name of the release version to create.
+   * @param {String} close - The date to close the fixVersion
    * @return {Object}
    */
-  async generate(commitLogs, releaseVersion=null) {
+  async generate(commitLogs, releaseVersion=null, close=null) {
     const logs = [];
     this.releaseVersions = [];
     try {
@@ -82,7 +83,7 @@ export default class Jira {
 
       // If there are Jira tickets, create a release for them
       if (ticketsList.length && releaseVersion) {
-        return this.addTicketsToReleaseVersion(ticketsList, releaseVersion).then(() => logs);
+        return this.addTicketsToReleaseVersion(ticketsList, releaseVersion, close).then(() => logs);
       }
 
       return logs;
@@ -157,9 +158,10 @@ export default class Jira {
    *
    * @param {Array} ticket - List of Jira ticket objects
    * @param {String} versionName - The name of the release version to add the ticket to.
+   * @param {String} close - The date to set and publish the Jira fixVersion.
    * @return {Promise}
    */
-  async addTicketsToReleaseVersion(tickets, versionName) {
+  async addTicketsToReleaseVersion(tickets, versionName, close) {
     const versionPromises = {};
     this.releaseVersions = [];
 
@@ -188,6 +190,12 @@ export default class Jira {
       const result = await this.jira.updateIssue(ticket.id, {
         fields: { fixVersions }
       });
+
+      if (close) {
+        this.releaseVersions.forEach(version => {
+          this.releaseProjectVersion(version.id, close);
+        });
+      }
       return result;
     }
 
@@ -227,6 +235,23 @@ export default class Jira {
       project: projectKey
     });
     return result;
+  }
+  /**
+   * Add a version to a single project, if it doesn't current exist
+   * @param {Int} versionId - The versionId
+   * @param {String} releaseDate - The Jira releaseDate
+   */
+
+
+  async releaseProjectVersion(versionId, releaseDate) {
+      const result = await this.jira.updateVersion({
+        "id": versionId,
+        "released": "true",
+        "releaseDate": releaseDate
+      }).catch(e => {
+        console.error(e);
+      });
+      return result;
   }
 
   /**
