@@ -46,6 +46,10 @@ function commandLineArgs() {
       '--release [release]',
       'Assign a release version to these stories'
     )
+    .option(
+      '--close [close]',
+      'Used with --release to set Jira fixVersion as released today (or passed date: YYYY-MM-DD)'
+    )
     .parse(process.argv);
 }
 
@@ -75,11 +79,25 @@ async function runProgram() {
       }
       program.release = await config.jira.generateReleaseVersionName();
     }
+    if (program.close && ! program.release) {
+      console.log("You need --release the tickets in order to set a release date.")
+      return;
+    }
+    if (program.close === true) {
+      program.close=new Date().toISOString().slice(0, 10);
+    }
+    if (typeof program.close === 'string') {
+      if (!isValidDate(program.close)) {
+        console.log("Must be a valid date formatted as yyyy-mm-dd");
+        return;
+      }
+    } // Invalid date
+
 
     // Get logs
     const range = getRangeObject(config);
     const commitLogs = await source.getCommitLogs(gitPath, range);
-    const changelog = await jira.generate(commitLogs, program.release);
+    const changelog = await jira.generate(commitLogs, program.release, program.close);
 
     // Render template
     const tmplData = await generateTemplateData(config, changelog, jira.releaseVersions);
@@ -129,6 +147,22 @@ async function postToSlack(config, data, changelogMessage) {
   } catch(err) {
     throw new Error(err);
   }
+}
+
+
+/**
+ * Check that date passed is valid.
+ *
+ * @param {String} dateString - The passed dated string.
+ * @return {boolean}
+ */
+function isValidDate(dateString) {
+  let regEx = /^\d{4}-\d{2}-\d{2}$/;
+  if(!dateString.match(regEx)) return false;  // Invalid format
+  let d = new Date(dateString);
+  let dNum = d.getTime();
+  if(!dNum && dNum !== 0) return false; // NaN value, Invalid date
+  return d.toISOString().slice(0,10) === dateString;
 }
 
 /**

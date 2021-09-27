@@ -102,6 +102,17 @@ jira-changelog --release sprint-12
 
 This will set the `fixVersions` of all issues to "sprint-12" in Jira.
 
+
+## Close Releases
+
+You can automatically close a fixVersion release set using the --release flag, therefore this flag must be use in combination with the --release flag. You may pass your own date as yyyy-mm-dd or it will use todays date.
+
+```bash
+jira-changelog --release sprint-12 --close 2021-12-25
+```
+
+This will set the `fixVersions` of all issues to "sprint-12" in Jira.
+
 ## Slack
 
 The script can also automatically post the changelog to slack.
