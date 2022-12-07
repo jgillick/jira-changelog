@@ -37,7 +37,7 @@
     "node-fetch": "^2.6.0",
     "promise-throttle": "^1.0.1",
     "regenerator-runtime": "^0.13.5",
-    "simple-git": "^1.132.0",
+    "simple-git": "^3.15.0",
     "source-map-support": "^0.5.16"
   }
 }
